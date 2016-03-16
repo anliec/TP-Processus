@@ -29,6 +29,6 @@
 //---------------------------------------------------- Fonctions publiques
 void Sortie()
 {
-	return 0;
+
 }
 

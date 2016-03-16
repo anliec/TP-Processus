@@ -27,7 +27,7 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void Sortie();
+void Sortie(int mpParking,int semParking,int mpNbrPlaces, int semNbrPlaces);
 // Mode d'emploi :
 //	TODO
 // Contrat :
