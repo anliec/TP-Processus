@@ -14,10 +14,11 @@
 //-------------------------------------------------------- Include système
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "Menu.h"
-#include "simulation.h"
+#include "Simulation.h"
 
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
@@ -28,7 +29,15 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //------------------------------------------------------- Fonctions privee
+void envoyerVoiture(unsigned barriere, unsigned typeUtilisateur)
+{
 
+}
+
+void sortieVoiture(unsigned numPlace)
+{
+
+}
 
 //---------------------------------------------------- Fonctions publiques
 void Simulation()
@@ -45,7 +54,8 @@ void Commande(char code, unsigned valeur)
 	switch(code)
 	{
 		case 'E':
-			brek;
+			exit(0);
+			break;
 		case 'P':
 			break;
 		case 'A':
