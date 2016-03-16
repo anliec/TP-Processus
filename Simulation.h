@@ -8,9 +8,9 @@
 *************************************************************************/
 
 
-//---------- Interface du module <Simulation> (fichier simulation.h) ---------
-#if ! defined ( SORTIE_H )
-#define SORTIE_H
+//---------- Interface de la tache <Simulation> (fichier simulation.h) ---------
+#if ! defined ( SIMULATION_H )
+#define SIMULATION_H
 
 //------------------------------------------------------------------------
 // Rôle du module <Simulation>
@@ -27,9 +27,9 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void Simulation();
+void Simulation(int balGenerale);
 // Mode d'emploi :
-//	methode lancee automatiquement au lancement de l'application
+//	TODO
 // Contrat :
 //	Aucun
 

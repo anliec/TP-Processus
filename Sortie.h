@@ -8,7 +8,7 @@
 *************************************************************************/
 
 
-//---------- Interface du module <Sortie> (fichier sortie.h) ---------
+//---------- Interface de la tache <Sortie> (fichier sortie.h) ---------
 #if ! defined ( SORTIE_H )
 #define SORTIE_H
 
@@ -29,7 +29,7 @@
 //---------------------------------------------------- Fonctions publiques
 void Sortie();
 // Mode d'emploi :
-//	methode lancee automatiquement au lancement de l'application
+//	TODO
 // Contrat :
 //	Aucun
 

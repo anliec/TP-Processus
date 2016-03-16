@@ -16,8 +16,9 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+#include <sys/wait.h>
 #include <unistd.h>
-#include <stlib.h>
+#include <stdlib.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "main.h"
