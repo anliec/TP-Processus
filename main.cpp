@@ -22,6 +22,7 @@
 #include "Outils.h"
 #include "main.h"
 #include "config.h"
+#include "Simulation.h"
 
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
