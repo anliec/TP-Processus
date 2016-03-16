@@ -29,3 +29,6 @@
 
 #IDEA files
 .idea/*
+
+#temp files
+*~
