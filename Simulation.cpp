@@ -13,6 +13,7 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <sys/types.h>
+#include <sys/msg.h>
 #include <unistd.h>
 #include <stdlib.h>
 //------------------------------------------------------ Include personnel
@@ -26,7 +27,7 @@
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
-
+int balGenerale;
 //////////////////////////////////////////////////////////////////  PUBLIC
 //------------------------------------------------------- Fonctions privee
 void envoyerVoiture(unsigned barriere, unsigned typeUtilisateur)
@@ -40,9 +41,9 @@ void sortieVoiture(unsigned numPlace)
 }
 
 //---------------------------------------------------- Fonctions publiques
-void Simulation(int balGenerale)
+void Simulation(int boiteAuxLettresGenerale)
 {
-	//TODO boucle infini ???
+	balGenerale = boiteAuxLettresGenerale;
 	for(;;)
 	{
 		Menu();
