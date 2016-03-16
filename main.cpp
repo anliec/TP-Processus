@@ -12,9 +12,10 @@
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
-
+#include <sys/types.h>
+#include <unistd.h>
 //------------------------------------------------------ Include personnel
-#include "
+#include "Outils.h"
 #include "main.h"
 
 ///////////////////////////////////////////////////////////////////  PRIVE
@@ -28,6 +29,8 @@
 //---------------------------------------------------- Fonctions publiques
 int main()
 {
-	Initial
+	InitialiserApplication ( XTERM );
+	sleep(10);
+	TerminerApplication ( false );
 } //----- fin de main
 
