@@ -19,7 +19,7 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+#*.a
 *.lib
 
 # Executables
@@ -29,3 +29,6 @@
 
 #IDEA files
 .idea/*
+
+#temp files
+*~
