@@ -29,6 +29,7 @@
 
 #IDEA files
 .idea/*
+CMakeLists.txt
 
 #temp files
 *~
