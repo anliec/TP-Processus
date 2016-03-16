@@ -27,14 +27,14 @@ RM = @rm
 MESSAGE = "Compilation terminée"
 
 $(EXE): $(OBJ)
-	@echo "Édition des liens:"
+	$(ECHO) "Édition des liens:"
 	$(LINK)  -o $(EXE) $^ $(EDLFLAGS)
 	$(ECHO) $(MESSAGE)
 
 #Mettre les dependances particulieres ici
 
 %.o:%.cpp
-	@echo "Compilation de <$<>"
+	$(ECHO) "Compilation de <$<>"
 	$(COMP) -c $(CPPFLAGS) $<
 
 clean:

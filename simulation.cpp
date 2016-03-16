@@ -16,6 +16,7 @@
 #include <unistd.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
+#include "Menu.h"
 #include "simulation.h"
 
 ///////////////////////////////////////////////////////////////////  PRIVE
@@ -26,9 +27,31 @@
 //---------------------------------------------------- Variables statiques
 
 //////////////////////////////////////////////////////////////////  PUBLIC
+//------------------------------------------------------- Fonctions privee
+
+
 //---------------------------------------------------- Fonctions publiques
-int simulation()
+void Simulation()
 {
-	return 0;
+	//TODO boucle infini ???
+	for(;;)
+	{
+		Menu();
+	}
+}
+
+void Commande(char code, unsigned valeur)
+{
+	switch(code)
+	{
+		case 'E':
+			brek;
+		case 'P':
+			break;
+		case 'A':
+			break;
+		case 'S':
+			break;
+	}
 }
 

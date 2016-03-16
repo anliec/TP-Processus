@@ -27,7 +27,7 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-int sortie();
+void Sortie();
 // Mode d'emploi :
 //	methode lancee automatiquement au lancement de l'application
 // Contrat :

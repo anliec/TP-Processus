@@ -27,11 +27,13 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-int simulation();
+void Simulation();
 // Mode d'emploi :
 //	methode lancee automatiquement au lancement de l'application
 // Contrat :
 //	Aucun
+
+void Commande(char code, unsigned valeur);
 
 #endif // SIMULATION_H
 
