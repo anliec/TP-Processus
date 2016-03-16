@@ -2,7 +2,7 @@
                            Parking  -  description
                              -------------------
     début                : 16/03/2016
-    copyright            : (C) par B3129
+    copyright            : (C)2016 par B3129
     e-mail               : pierre-louis.lefebvre@insa-lyon.fr
     					   nicolas.six@insa-lyon.fr
 *************************************************************************/

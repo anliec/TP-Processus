@@ -7,11 +7,11 @@ COMP = @g++
 LINK = @g++
 
 # Options de compilation et editions de liens
-CHEMIN = includes
+CHEMIN = /share/public/tp/tp-multitache
 INC = -I$(CHEMIN)
 LIB = -L$(CHEMIN)
 CPPFLAGS = -Wall -ansi -ggdb -std=c++11 -g $(INC)
-EDLFLAGS = $(LIB)
+EDLFLAGS = $(LIB) -ltp -lncurses -ltcl
 
 
 #Fichiers
@@ -28,10 +28,11 @@ MESSAGE = "Compilation terminée"
 
 $(EXE): $(OBJ)
 	@echo "Édition des liens:"
-	$(LINK)  -o $(EXE) $^ $(EDLFLAGS) -llibtp #-ltp -lncurses -ltcl
+	$(LINK)  -o $(EXE) $^ $(EDLFLAGS)
 	$(ECHO) $(MESSAGE)
 
 #Mettre les dependances particulieres ici
+main.o : /share/public/tp/tp-multitache/Outils.h main.h
 
 %.o:%.cpp
 	@echo "Compilation de <$<>"
