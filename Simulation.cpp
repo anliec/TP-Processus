@@ -8,7 +8,7 @@
 *************************************************************************/
 
 
-//---------- Réalisation du module <Simulation> (fichier simulation.cpp) -----
+//---------- Realisation de la tache <Simulation> (fichier simulation.cpp) -----
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
@@ -40,7 +40,7 @@ void sortieVoiture(unsigned numPlace)
 }
 
 //---------------------------------------------------- Fonctions publiques
-void Simulation()
+void Simulation(int balGenerale)
 {
 	//TODO boucle infini ???
 	for(;;)
