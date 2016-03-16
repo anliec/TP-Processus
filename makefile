@@ -28,7 +28,7 @@ MESSAGE = "Compilation terminée"
 
 $(EXE): $(OBJ)
 	@echo "Édition des liens:"
-	$(LINK)  -o $(EXE) $^ $(EDLFLAGS) #-ltp -lncurses -ltcl
+	$(LINK)  -o $(EXE) $^ $(EDLFLAGS) -llibtp #-ltp -lncurses -ltcl
 	$(ECHO) $(MESSAGE)
 
 #Mettre les dependances particulieres ici
