@@ -7,7 +7,7 @@ COMP = @g++
 LINK = @g++
 
 # Options de compilation et editions de liens
-CHEMIN = /share/public/tp/tp-multitache
+CHEMIN = includes
 INC = -I$(CHEMIN)
 LIB = -L$(CHEMIN)
 CPPFLAGS = -Wall -ansi -ggdb -std=c++11 -g $(INC)
@@ -32,7 +32,6 @@ $(EXE): $(OBJ)
 	$(ECHO) $(MESSAGE)
 
 #Mettre les dependances particulieres ici
-main.o : /share/public/tp/tp-multitache/Outils.h main.h
 
 %.o:%.cpp
 	@echo "Compilation de <$<>"
