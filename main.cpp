@@ -27,7 +27,7 @@
 
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
-
+const int DROITS_ACCES = 0660;
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
@@ -39,18 +39,21 @@ int main()
 	InitialiserApplication( XTERM );
 	
 	// segment de mem partagee indiquant le nombre places dispo
-	int memPlacesDispo = shmget( IPC_PRIVATE, sizeof(int), IPC_CREAT | 600 );
-	// segment de memoire partagee contant l'etat de chaque place de parking
-	int memParking = shmget( IPC_PRIVATE, sizeof(Voiture) * 8, IPC_CREAT | 600 ); 
+	int memPlacesDispo = shmget( IPC_PRIVATE, sizeof(int), 
+		IPC_CREAT | DROITS_ACCES);
+	// segment de memoire partagee contant l'etat de chaque place de 
+	// parking
+	int memParking = shmget( IPC_PRIVATE, sizeof(Voiture) * 8, IPC_CREAT | 		
+		DROITS_ACCES); 
 	// et le semaphore general d'acces aux deux mem partagees precedentes
-	int semParking = semget( IPC_PRIVATE, 2, IPC_CREAT | 600 );
+	int semParking = semget( IPC_PRIVATE, 2, IPC_CREAT | DROITS_ACCES);
 	// boites aux lettres de voitures en entree
 	
 	// pid de Simulation
 	int pidSimul;
 	if( ( pidSimul = fork() ) == 0 )
 	{
-		Simulation(memPlacesDispo, memParking, semParking); 	
+		Simulation(0); 	
 	} 
 	else
 	{
