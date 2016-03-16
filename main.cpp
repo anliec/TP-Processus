@@ -31,6 +31,6 @@ int main()
 {
 	InitialiserApplication ( XTERM );
 	sleep(10);
-	TerminerApplication ( false );
+	TerminerApplication ( true );
 } //----- fin de main
 
