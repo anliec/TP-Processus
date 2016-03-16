@@ -16,8 +16,9 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+#include <sys/wait.h>
 #include <unistd.h>
-#include <stlib.h>
+#include <stdlib.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "main.h"
@@ -46,8 +47,8 @@ int main()
 	// boites aux lettres de voitures en entree
 	
 	// pid de Simulation
-	int pidSimul
-	if( pidSimul = fork() ) == 0 )
+	int pidSimul;
+	if( ( pidSimul = fork() ) == 0 )
 	{
 		Simulation(memPlacesDispo, memParking, semParking); 	
 	} 
