@@ -58,7 +58,7 @@ int main()
 	int pidSimul;
 	if((pidSimul = fork()) == 0)
 	{
-		Simulation(0); 	
+		Simulation();
 	} 
 	else
 	{

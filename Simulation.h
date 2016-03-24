@@ -27,7 +27,7 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void Simulation(int balGenerale);
+void Simulation();
 // Mode d'emploi :
 //	TODO
 // Contrat :

@@ -69,6 +69,7 @@ typedef struct
 
 typedef  struct
 {
+	long type;
 	unsigned valeur;
 } CommandeStruct;
 

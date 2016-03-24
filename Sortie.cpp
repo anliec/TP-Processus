@@ -22,6 +22,7 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
+#include <time.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "Sortie.h"
@@ -77,6 +78,7 @@ void Sortie()
         semP(SEMELM_MP_PARKING);
         Voiture voiture = mpParking[message.valeur];
         semV(SEMELM_MP_PARKING);
+        voiture.heureDepart = time(NULL);
         AfficherSortie(voiture.typeUsager,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
     }
 }
