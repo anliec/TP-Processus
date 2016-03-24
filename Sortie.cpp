@@ -40,8 +40,8 @@ struct Voiture *mpParking;
 void init();
 void initId();
 void attachSharedMemory();
-void sigChldHandler(int signum);
-void sigUsr2Handler(int signum);
+void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
+void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext);
 void semN(unsigned short int sem_num);
 void semV(unsigned short int sem_num);
 
@@ -60,12 +60,14 @@ void Sortie()
 
         //lance voiturier
         pid_t voiturier = SortirVoiture(message.valeur);
+        if(voiturier == -1) //s'il n'y a pas de voiture à cette place on attend une nouvelle demande
+            continue;
+        listeVoiturier.push_back(voiturier);
 
         //affiche message de sortie
         semP(SEMELM_MP_PARKING);
         Voiture voiture = mpParkingId[message.valeur];
         semV(SEMELM_MP_PARKING);
-
         AfficherSortie(voiture.type,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
     }
 }
@@ -73,8 +75,11 @@ void Sortie()
 void init()
 {
     //catch signals
-    signal(SIGUSR2,sigUsr2Handler);
-    signal(SIGCHLD,sigChldHandler);
+    struct sigaction sigactionUSR, sigactionCHLD;
+    sigactionCHLD.sa_sigaction = &sigChldHandler;
+    sigactionUSR.sa_sigaction = &sigUsr2Handler;
+    sigaction(SIGCHLD, &sigactionCHLD, NULL);
+    sigaction(SIGUSR2, &sigactionUSR, NULL);
     //initialistion des ID des resources partagées
     initId();
     //attachement des mémoires partagé
@@ -133,12 +138,12 @@ void attachSharedMemory()
     }
 }
 
-void sigChldHandler(int signum)
+void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 {
 
 }
 
-void sigUsr2Handler(int signum)
+void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext)
 {
 
 }
