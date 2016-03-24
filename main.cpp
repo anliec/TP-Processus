@@ -22,12 +22,11 @@
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "main.h"
-#include "config.h"
 #include "Simulation.h"
-
+#include "config.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
-const int DROITS_ACCES = 0660;
+
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
@@ -45,14 +44,14 @@ int main()
 	// segment de memoire partagee contant l'etat de chaque place de 
 	// parking
 	int memParking = shmget(ftok(PATH_TO_MP_PARKING, PROJECT_ID),
-		sizeof(Voiture) * 8, IPC_CREAT | DROITS_ACCES); 
+		sizeof(Voiture) * NB_PLACES, IPC_CREAT | DROITS_ACCES); 
 	
 	// le semaphore general contenant tous les semaphores
 	int sem = semget(ftok(PATH_TO_SEM, PROJECT_ID), NUMBER_OF_SEM, 
 		IPC_CREAT | DROITS_ACCES);
 	
 	// boites aux lettres generale
-	int msgbuf = msgget(ftok(PATH_TO_MSGBUF, PROJECT_ID), IPC_CREAT 
+	int msggen = msgget(ftok(PATH_TO_MSGBUF, PROJECT_ID), IPC_CREAT 
 		| DROITS_ACCES);
 	
 	// pid de Simulation
@@ -64,7 +63,7 @@ int main()
 	else
 	{
 		waitpid(pidSimul, NULL, 0);
-		msgctl(msgbuf, IPC_RMID, 0);
+		msgctl(msggen, IPC_RMID, 0);
 		semctl(sem, IPC_RMID, 0);
 		shmctl(memParking, IPC_RMID, 0);
 		shmctl(memPlacesDispo, IPC_RMID, 0); 
