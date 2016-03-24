@@ -29,9 +29,11 @@
 //---------------------------------------------------- Fonctions publiques
 void Entree(TypeBarriere typeBarriere);
 // Mode d'emploi :
-//	TODO
+// Fonction principale du processus de gestion des entrees d'une barriere
+// typeBarriere est le type d'entree correspondant au processus
 // Contrat :
-//	Aucun
+// msgbufEntreeId = PROF_BLAISE_PASCAL ou AUTRE_BLAISE_PASCAL ou
+// ENTREE_GASTON_BERGER
 
 #endif // ENTREE_H
 
