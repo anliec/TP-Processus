@@ -31,10 +31,16 @@
 int msgbuffId;
 int mpPlaceDispoId;
 int mpParkingId;
+int mpDemandeEntreePId;
+int mpDemandeEntreeAId;
+int mpDemandeEntreeGBId;
 int semId;
 
 int *mpPlaceDispo;
-struct Voiture *mpParking;
+Voiture *mpParking;
+Requete *mpDemandeEntreeP;
+Requete *mpDemandeEntreeA;
+Requete *mpDemandeEntreeGB;
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void init();
@@ -42,7 +48,7 @@ void initId();
 void attachSharedMemory();
 void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
 void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext);
-void semN(unsigned short int sem_num);
+void semP(unsigned short int sem_num);
 void semV(unsigned short int sem_num);
 
 void Sortie()
@@ -66,7 +72,7 @@ void Sortie()
 
         //affiche message de sortie
         semP(SEMELM_MP_PARKING);
-        Voiture voiture = mpParkingId[message.valeur];
+        Voiture voiture = mpParking[message.valeur];
         semV(SEMELM_MP_PARKING);
         AfficherSortie(voiture.type,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
     }
@@ -140,7 +146,23 @@ void attachSharedMemory()
 
 void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 {
-
+    int ret;
+    waitpid(siginfo.si_pid,&ret,0);
+    //vide la place de parking
+    Voiture voitureNull;
+    semP(SEMELM_MP_PARKING);
+    mpParking[ret] = voitureNull;
+    semV(SEMELM_MP_PARKING);
+    //ajoute une place
+    semP(SEMELM_MP_PLACEDISPO);
+    if(*mpPlaceDispo > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
+    {
+        (*mpPlaceDispo)++;
+    }
+    else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
+    {
+        //TODO
+    }
 }
 
 void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext)

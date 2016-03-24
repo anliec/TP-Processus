@@ -43,6 +43,9 @@ const int SEMELM_SINC_ENTREE_GB = 4;
 //mémoires partagées
 const std::string PATH_TO_MP_PLACEDISPO = "mpPlaceDispo";
 const std::string PATH_TO_MP_PARKING = "mpParking";
+const std::string PATH_TO_MP_ENTREE_P = "mpDemandeEntreeP";
+const std::string PATH_TO_MP_ENTREE_A = "mpDemandeEntreeA";
+const std::string PATH_TO_MP_ENTREE_GB = "mpDemandeEntreeGB";
 
 //------------------------------------------------------------------ Types
 typedef struct
