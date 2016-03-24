@@ -10,7 +10,7 @@ LINK = @g++
 CHEMIN = includes
 INC = -I$(CHEMIN)
 LIB = -L$(CHEMIN)
-CPPFLAGS = -Wall -ansi -ggdb -std=c++11 -fpermissive -g $(INC)
+CPPFLAGS = -Wall -ansi -ggdb -std=c++11 -g $(INC)
 EDLFLAGS = $(LIB) -ltp -lncurses -ltcl
 
 

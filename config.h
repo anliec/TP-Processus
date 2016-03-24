@@ -9,7 +9,7 @@
 
 
 //---------- Interface  <Config> (fichier config.h) ----------------------
-#if ! defined ( CONFIG_H )
+#ifndef CONFIG_H
 #define CONFIG_H
 
 //------------------------------------------------------------------------
@@ -42,9 +42,6 @@ const int SEMELM_SINC_ENTREE_GB = 4;
 //mémoires partagées
 const char* PATH_TO_MP_PLACEDISPO = "mpPlaceDispo";
 const char* PATH_TO_MP_PARKING = "mpParking";
-const char* PATH_TO_MP_ENTREE_P = "mpDemandeEntreeP";
-const char* PATH_TO_MP_ENTREE_A = "mpDemandeEntreeA";
-const char* PATH_TO_MP_ENTREE_GB = "mpDemandeEntreeGB";
 
 //------------------------------------------------------------------ Types
 // Structure du message : voiture en entree ou en sortie

@@ -31,25 +31,26 @@
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
-int msgbuffId;
-int mpPlaceDispoId;
-int mpParkingId;
-int mpDemandeEntreePId;
-int mpDemandeEntreeAId;
-int mpDemandeEntreeGBId;
-int semId;
+static int msgbuffId;
+static int mpPlaceDispoId;
+static int mpParkingId;
+static int semId;
 
-int *mpPlaceDispo;
-Voiture *mpParking;
+static int *mpPlaceDispo;
+static Voiture *mpParking;
+
+//------------------------------------------------------- Fonctions privee
+static void init();
+static void initId();
+static void attachSharedMemory();
+static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
+static void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext);
+static void semP(unsigned short int sem_num);
+static void semV(unsigned short int sem_num);
+
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void init();
-void initId();
-void attachSharedMemory();
-void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
-void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext);
-void semP(unsigned short int sem_num);
-void semV(unsigned short int sem_num);
+
 
 void Sortie()
 {
@@ -78,7 +79,7 @@ void Sortie()
     }
 }
 
-void init()
+static void init()
 {
     //catch signals
     struct sigaction sigactionUSR, sigactionCHLD;
@@ -92,7 +93,7 @@ void init()
     attachSharedMemory();
 }
 
-void initId()
+static void initId()
 {
     //récupération de la boite au lettre:
     key_t keyMsgBuf = ftok(PATH_TO_MSGBUF,PROJECT_ID);
@@ -132,19 +133,19 @@ void initId()
         std::cerr << "unable to open semaphores on Sortie" << std::endl;
 }
 
-void attachSharedMemory()
+static void attachSharedMemory()
 {
-    if((mpPlaceDispo = shmat(mpParkingId,NULL,0)) == NULL)
+    if((mpPlaceDispo = (int*)shmat(mpParkingId,NULL,0)) == NULL)
     {
         std::cerr << "unable to attach shared memory Parking." << std::endl;
     }
-    if((mpParking = shmat(mpParkingId,NULL,0)) == NULL)
+    if((mpParking = (Voiture*)shmat(mpParkingId,NULL,0)) == NULL)
     {
         std::cerr << "unable to attach shared memory PlaceDispo." << std::endl;
     }
 }
 
-void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
+static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 {
     int ret;
     waitpid(siginfo->si_pid,&ret,0);
@@ -165,12 +166,12 @@ void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     }
 }
 
-void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext)
+static void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext)
 {
 
 }
 
-void semP(unsigned short int sem_num)
+static void semP(unsigned short int sem_num)
 {
     struct sembuf op;
     op.sem_num = sem_num;
@@ -179,7 +180,7 @@ void semP(unsigned short int sem_num)
     semop(semId,&op,1);
 }
 
-void semV(unsigned short int sem_num)
+static void semV(unsigned short int sem_num)
 {
     struct sembuf op;
     op.sem_num = sem_num;
