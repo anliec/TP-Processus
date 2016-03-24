@@ -14,8 +14,8 @@
 
 //------------------------------------------------------------------------
 // Role de <Config>
-// Contient toutes les definitions de types et constantes necessaire a 
-// toute l'application (l'ensemble des taches de l'application). En 
+// Contient toutes les definitions de types et constantes necessaire a
+// toute l'application (l'ensemble des taches de l'application). En
 // particulier la definiton d'une voiture et d'une requete
 //
 //------------------------------------------------------------------------
@@ -47,6 +47,9 @@ const int SEMELM_SINC_ENTREE_GB = 4;
 // mémoires partagées
 const char* PATH_TO_MP_PLACEDISPO = "mpPlaceDispo";
 const char* PATH_TO_MP_PARKING = "mpParking";
+const char* PATH_TO_MP_ENTREE_P = "mpDemandeEntreeP";
+const char* PATH_TO_MP_ENTREE_A = "mpDemandeEntreeA";
+const char* PATH_TO_MP_ENTREE_GB = "mpDemandeEntreeGB";
 
 //------------------------------------------------------------------ Types
 // Structure du message : voiture en entree ou en sortie
