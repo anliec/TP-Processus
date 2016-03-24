@@ -50,7 +50,7 @@ void Simulation(int boiteAuxLettresGenerale)
 	}
 }
 
-void Commande(char code, unsigned valeur)
+void Commande(char code, unsigned int valeur)
 {
 	switch(code)
 	{

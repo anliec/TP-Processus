@@ -39,28 +39,35 @@ int main()
 	InitialiserApplication( XTERM );
 	
 	// segment de mem partagee indiquant le nombre places dispo
-	int memPlacesDispo = shmget( IPC_PRIVATE, sizeof(int), 
-		IPC_CREAT | DROITS_ACCES);
+	int memPlacesDispo = shmget(ftok(PATH_TO_MP_PLACEDISPO, PROJECT_ID), 
+		sizeof(int), IPC_CREAT | DROITS_ACCES);
+	
 	// segment de memoire partagee contant l'etat de chaque place de 
 	// parking
-	int memParking = shmget( IPC_PRIVATE, sizeof(Voiture) * 8, IPC_CREAT | 		
-		DROITS_ACCES); 
-	// et le semaphore general d'acces aux deux mem partagees precedentes
-	int semParking = semget( IPC_PRIVATE, 2, IPC_CREAT | DROITS_ACCES);
-	// boites aux lettres de voitures en entree
+	int memParking = shmget(ftok(PATH_TO_MP_PARKING, PROJECT_ID),
+		sizeof(Voiture) * 8, IPC_CREAT | DROITS_ACCES); 
+	
+	// le semaphore general contenant tous les semaphores
+	int sem = semget(ftok(PATH_TO_SEM, PROJECT_ID), NUMBER_OF_SEM, 
+		IPC_CREAT | DROITS_ACCES);
+	
+	// boites aux lettres generale
+	int msgbuf = msgget(ftok(PATH_TO_MSGBUF, PROJECT_ID), IPC_CREAT 
+		| DROITS_ACCES);
 	
 	// pid de Simulation
 	int pidSimul;
-	if( ( pidSimul = fork() ) == 0 )
+	if((pidSimul = fork()) == 0)
 	{
 		Simulation(0); 	
 	} 
 	else
 	{
 		waitpid(pidSimul, NULL, 0);
-		semctl( semParking, IPC_RMID, 0 );
-		shmctl( memParking, IPC_RMID, 0 );
-		shmctl( memPlacesDispo, IPC_RMID, 0 ); 
+		msgctl(msgbuf, IPC_RMID, 0);
+		semctl(sem, IPC_RMID, 0);
+		shmctl(memParking, IPC_RMID, 0);
+		shmctl(memPlacesDispo, IPC_RMID, 0); 
 		TerminerApplication( true );
 		exit(0);
 	}
