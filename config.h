@@ -22,23 +22,47 @@
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
+#include <string>
 #include "Outils.h"
 //------------------------------------------------------------- Constantes
+const int PROJECT_ID = 0;
+//boite aux lettres
+const std::string PATH_TO_MSGBUF = "msgbuf";
+const long MSGBUF_ID_ENTREE_P = 0;
+const long MSGBUF_ID_ENTREE_A = 1;
+const long MSGBUF_ID_ENTREE_GB = 2;
+const long MSGBUF_ID_SORTIE = 3;
+//sémaphore
+const int NUMBER_OF_SEM = 5;
+const std::string PATH_TO_SEM = "semaphore";
+const int SEMELM_MP_PLACEDISPO = 0;
+const int SEMELM_MP_PARKING = 1;
+const int SEMELM_SINC_ENTREE_P = 2;
+const int SEMELM_SINC_ENTREE_A = 3;
+const int SEMELM_SINC_ENTREE_GB = 4;
+//mémoires partagées
+const std::string PATH_TO_MP_PLACEDISPO = "mpPlaceDispo";
+const std::string PATH_TO_MP_PARKING = "mpParking";
 
 //------------------------------------------------------------------ Types
 typedef struct
 {
 	TypeUsager type;
-	int immatriculation;
-	int heureArrivee;
-	int heureDepart;
+	unsigned immatriculation;
+	time_t heureArrivee;
+	time_t heureDepart;
 } Voiture;
 
 typedef struct
 {
 	TypeUsager type;
-	int heureArrivee;
+	time_t heureArrivee;
 } Requete;
+
+typedef  struct
+{
+	unsigned valeur;
+} Commande;
 
 
 #endif // CONFIG_H
