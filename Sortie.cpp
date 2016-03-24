@@ -19,8 +19,9 @@
 #include <sys/shm.h>
 #include <unistd.h>
 #include <signal.h>
-#include <vector>
+#include <list>
 #include <iostream>
+#include <algorithm>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "Sortie.h"
@@ -39,12 +40,14 @@ static int semId;
 static int *mpPlaceDispo;
 static Voiture *mpParking;
 
+static std::list<pid_t> listeVoiturier;
+
 //------------------------------------------------------- Fonctions privee
 static void init();
 static void initId();
 static void attachSharedMemory();
 static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
-static void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext);
+static void sigUsr2Handler(int signum);
 static void semP(unsigned short int sem_num);
 static void semV(unsigned short int sem_num);
 
@@ -58,7 +61,6 @@ void Sortie()
     init();
 
     //phase moteur
-    std::vector<pid_t> listeVoiturier;
     while(1)
     {
         CommandeStruct message;
@@ -84,7 +86,7 @@ static void init()
     //catch signals
     struct sigaction sigactionUSR, sigactionCHLD;
     sigactionCHLD.sa_sigaction = &sigChldHandler;
-    sigactionUSR.sa_sigaction = &sigUsr2Handler;
+    sigactionUSR.sa_handler = &sigUsr2Handler;
     sigaction(SIGCHLD, &sigactionCHLD, NULL);
     sigaction(SIGUSR2, &sigactionUSR, NULL);
     //initialistion des ID des resources partagées
@@ -147,28 +149,85 @@ static void attachSharedMemory()
 
 static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 {
+    list<pid_t>::iterator voiturier = find(listeVoiturier.begin(),listeVoiturier.end(),siginfo->si_pid);
+    if(voiturier == listeVoiturier.end())
+        return; //si pour une raison quelconque ce n'était pas un voiturier
+
     int ret;
     waitpid(siginfo->si_pid,&ret,0);
-    //vide la place de parking
-    Voiture voitureNull;
+    listeVoiturier.erase(voiturier);
+    //vide la place de parking     ->   désactiver car inuitle (qui va aller vérifier ???)
+    /*Voiture voitureNull;
     semP(SEMELM_MP_PARKING);
     mpParking[ret] = voitureNull;
-    semV(SEMELM_MP_PARKING);
+    semV(SEMELM_MP_PARKING);*/
     //ajoute une place
-    semP(SEMELM_MP_PLACEDISPO);
+
     if(*mpPlaceDispo > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
+        semP(SEMELM_MP_PLACEDISPO);
         (*mpPlaceDispo)++;
+        semV(SEMELM_MP_PLACEDISPO);
     }
     else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
     {
         //TODO
+        bool waitingAtA, waitingAtP, waitingAtGB;
+        Requete rA, rP, rGB;
+        waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, MSG_COPY | IPC_NOWAIT) != -1;
+        waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete),MSGBUF_ID_REQUETE_P, MSG_COPY | IPC_NOWAIT) != -1;
+        waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete),MSGBUF_ID_REQUETE_GB,MSG_COPY | IPC_NOWAIT) != -1;
+        //On trouve qui est plus prioritaire
+        Requete *nextIn = nullptr;
+        int semEntree;
+        if(waitingAtP)
+        {
+            nextIn = &rP;
+            semEntree = SEMELM_SINC_ENTREE_P;
+        }
+        if(waitingAtGB)
+        {
+            if(nextIn==nullptr || (nextIn->heureArrivee > rGB.heureArrivee && rGB.typeUsager==PROF))
+            {
+                nextIn = &rGB;
+                semEntree = SEMELM_SINC_ENTREE_GB;
+            }
+        }
+        if(waitingAtA)
+        {
+            if(nextIn==nullptr || (nextIn->typeUsager==AUTRE && nextIn->heureArrivee > rA.heureArrivee))
+            {
+                nextIn = &rA;
+                semEntree = SEMELM_SINC_ENTREE_A;
+            }
+        }
+        if(nextIn!= nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
+        {
+            msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette acepter de la boite aux lettre
+            semV(semEntree);//donne l'autorisation de rentrer
+        }
+        else //si le parking était plein mais que personne n'attendait on ajoute une place libre
+        {
+            semP(SEMELM_MP_PLACEDISPO);
+            (*mpPlaceDispo)++;
+            semV(SEMELM_MP_PLACEDISPO);
+        }
     }
 }
 
-static void sigUsr2Handler(int signum,siginfo_t *siginfo,void* ucontext)
+static void sigUsr2Handler(int signum)
 {
-
+    //desactive sigChldHandler
+    struct sigaction resetAction;
+    resetAction.sa_handler = SIG_IGN;//pour ignorer les prochains signaux
+    sigaction(SIGCHLD,&resetAction,NULL);
+    //arrête tout les voiturier un à un
+    for(pid_t pid:listeVoiturier)
+    {
+        kill(pid,SIGUSR2);
+        waitpid(pid,NULL,0);
+    }
+    exit(0); //un peut brutale peut-être
 }
 
 static void semP(unsigned short int sem_num)
