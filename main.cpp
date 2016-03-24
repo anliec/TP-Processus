@@ -22,9 +22,8 @@
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 #include "main.h"
-#include "config.h"
 #include "Simulation.h"
-
+#include "config.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
