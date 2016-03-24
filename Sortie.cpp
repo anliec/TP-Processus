@@ -34,7 +34,7 @@ int mpParkingId;
 int semId;
 
 int *mpPlaceDispo;
-struct Voiture *mpParking;
+Voiture *mpParking;
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void init();
