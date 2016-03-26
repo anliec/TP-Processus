@@ -105,7 +105,7 @@ static void initId()
     {
         std::cerr << "unable to get key for msgbuf on " << PATH_TO_MSGBUF << std::endl;
     }
-    else if((msgbuffId = msgget(keyMsgBuf,0660)) <0)
+    else if((msgbuffId = msgget(keyMsgBuf,DROITS_ACCES)) <0)
     {
         std::cerr << "unable to open msgbuff on Sortie" << std::endl;
     }
@@ -115,7 +115,7 @@ static void initId()
     {
         std::cerr << "unable to get key for MP on " << PATH_TO_MP_PLACEDISPO << std::endl;
     }
-    else if((mpPlaceDispoId=shmget(keyMpPD,0,0660)) <0)
+    else if((mpPlaceDispoId=shmget(keyMpPD,0,DROITS_ACCES)) <0)
     {
         std::cerr << "unable to open MP PD on Sortie" << std::endl;
     }
@@ -125,7 +125,7 @@ static void initId()
     {
         std::cerr << "unable to get key for MP on " << PATH_TO_MP_PARKING << std::endl;
     }
-    else if((mpParkingId=shmget(keyMpP,0,0660)) <0)
+    else if((mpParkingId=shmget(keyMpP,0,DROITS_ACCES)) <0)
     {
         std::cerr << "unable to open MP Parking on Sortie" << std::endl;
     }
@@ -133,7 +133,7 @@ static void initId()
     key_t keySem = ftok(PATH_TO_SEM,PROJECT_ID);
     if(keySem<0)
         std::cerr << "unable to get key for semaphores on Sortie" << std::endl;
-    else if((semId=semget(keySem,NUMBER_OF_SEM,0660)) <0)
+    else if((semId=semget(keySem,NUMBER_OF_SEM,DROITS_ACCES)) <0)
         std::cerr << "unable to open semaphores on Sortie" << std::endl;
 }
 
@@ -158,13 +158,15 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     int ret;
     waitpid(siginfo->si_pid,&ret,0);
     listeVoiturier.erase(voiturier);
-    //vide la place de parking     ->   désactiver car inuitle (qui va aller vérifier ???)
+    //vide la place de parking     ->   désactiver car inutile (qui va aller vérifier ???)
     /*Voiture voitureNull;
     semP(SEMELM_MP_PARKING);
     mpParking[ret] = voitureNull;
     semV(SEMELM_MP_PARKING);*/
-    //ajoute une place
+    //vide l'affichage de la place de parking
+    Effacer(ret);
 
+    //ajoute une place
     if(*mpPlaceDispo > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
         semP(SEMELM_MP_PLACEDISPO);
@@ -173,7 +175,6 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     }
     else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
     {
-        //TODO
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
         waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, MSG_COPY | IPC_NOWAIT) != -1;
