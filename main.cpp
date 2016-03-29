@@ -24,6 +24,8 @@
 #include "main.h"
 #include "Simulation.h"
 #include "config.h"
+#include "Sortie.h"
+#include "Entree.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -54,15 +56,43 @@ int main()
 	int msggen = msgget(ftok(PATH_TO_MSGBUF, PROJECT_ID), IPC_CREAT 
 		| DROITS_ACCES);
 	
-	// pid de Simulation
-	int pidSimul;
+	// pid des processus fils
+	int pidSimul, pidEntreeP, pidEntreeA, pidEntreeGB, pidSortie;
 	if((pidSimul = fork()) == 0)
 	{
 		Simulation();
 	} 
-	else
+	else if((pidSortie = fork()) == 0)
 	{
+		Sortie();
+	}
+	else if((pidEntreeP = fork()) == 0)	
+	{
+		Entree(PROF_BLAISE_PASCAL);
+	}
+	else if((pidEntreeA = fork()) == 0)	
+	{
+		Entree(AUTRE_BLAISE_PASCAL);
+	}
+	else if((pidEntreeGB = fork()) == 0)
+	{
+		Entree(ENTREE_GASTON_BERGER);
+	}
+	else
+	{	
+		// attend que l'arret de Simulation indique la fin du programme
 		waitpid(pidSimul, NULL, 0);
+		// arret de Sortie
+		kill(pidSortie,SIGUSR2);
+		waitpid(pidSortie, NULL, 0);
+		// arret des Entree
+		kill(pidEntreeP, SIGUSR2);
+		waitpid(pidEntreeP, NULL, 0);
+		kill(pidEntreeA, SIGUSR2);
+		waitpid(pidEntreeA, NULL, 0);
+		kill(pidEntreeGB, SIGUSR2);
+		waitpid(pidEntreeGB, NULL, 0);
+		// liberation des ressources partagees
 		msgctl(msggen, IPC_RMID, 0);
 		semctl(sem, IPC_RMID, 0);
 		shmctl(memParking, IPC_RMID, 0);

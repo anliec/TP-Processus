@@ -164,7 +164,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     mpParking[ret] = voitureNull;
     semV(SEMELM_MP_PARKING);*/
     //vide l'affichage de la place de parking
-    Effacer(ret);
+    Effacer((TypeZone) ret);
 
     //ajoute une place
     if(*mpPlaceDispo > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
@@ -206,7 +206,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
         }
         if(nextIn!= nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
         {
-            msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette acepter de la boite aux lettre
+            msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
             semV(semEntree);//donne l'autorisation de rentrer
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
@@ -222,7 +222,7 @@ static void sigUsr2Handler(int signum)
 {
     //desactive sigChldHandler
     struct sigaction resetAction;
-    resetAction.sa_handler = SIG_IGN;//pour ignorer les prochains signaux
+    resetAction.sa_handler = SIG_IGN;// pour ignorer les prochains signaux
     sigaction(SIGCHLD,&resetAction,NULL);
     //arrête tout les voiturier un à un
     for(pid_t pid:listeVoiturier)
@@ -230,7 +230,7 @@ static void sigUsr2Handler(int signum)
         kill(pid,SIGUSR2);
         waitpid(pid,NULL,0);
     }
-    exit(0); //un peut brutale peut-être
+    exit(0); //un peut brutal peut-être
 }
 
 static void semP(unsigned short int sem_num)
