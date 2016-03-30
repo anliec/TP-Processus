@@ -17,7 +17,7 @@ EDLFLAGS = $(LIB) -ltp -lncurses -ltcl
 #Fichiers
 
 SRC =
-INT = main.h Simulation.h Sortie.h #Mettre les .h ici
+INT = main.h Simulation.h Sortie.h Entree.h #Mettre les .h ici
 REAL = $(INT:.h=.cpp)
 OBJ = $(INT:.h=.o) #Mettre le .o du programme de test la où ya le main
 
