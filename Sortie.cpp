@@ -145,6 +145,14 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     int ret;
     waitpid(siginfo->si_pid,&ret,0);
     listeVoiturier.erase(voiturier);
+    if(WIFEXITED(ret))
+    {
+        ret = WEXITSTATUS(ret);
+    }
+    else
+    {
+        return; //le voiturier n'a pas quitté normalement, que faire d'autre ?
+    }
     //vide la place de parking     ->   désactiver car inutile (qui va aller vérifier ???)
     /*Voiture voitureNull;
     semP(SEMELM_MP_PARKING);
@@ -154,12 +162,14 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     Effacer((TypeZone) ret);
 
     //ajoute une place
+    std::cerr << "place restante av : " << semVal(SEMELM_PLACEDISPO) << std::endl;
     if(semVal(SEMELM_PLACEDISPO) > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
         semV(SEMELM_PLACEDISPO);
     }
-    else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
+    else // sinon il faut dire quel entrée doit s'ouvrir (ou ajouter une place si il n'y pas de demandes)
     {
+        std::cerr << "cas 2" << std::endl;
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
         waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, MSG_COPY | IPC_NOWAIT) != -1;
@@ -173,6 +183,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
             nextIn = &rP;
             semEntree = SEMELM_SINC_ENTREE_P;
         }
+
         if(waitingAtGB)
         {
             if(nextIn==nullptr || (nextIn->heureArrivee > rGB.heureArrivee && rGB.typeUsager==PROF))
@@ -181,6 +192,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 semEntree = SEMELM_SINC_ENTREE_GB;
             }
         }
+
         if(waitingAtA)
         {
             if(nextIn==nullptr || (nextIn->typeUsager==AUTRE && nextIn->heureArrivee > rA.heureArrivee))
@@ -189,6 +201,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 semEntree = SEMELM_SINC_ENTREE_A;
             }
         }
+
         if(nextIn!= nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
         {
             msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
@@ -196,9 +209,11 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
+            std::cerr << "cas else " << std::endl;
             semV(SEMELM_PLACEDISPO);
         }
     }
+    std::cerr << "place restante ap : " << semVal(SEMELM_PLACEDISPO) << std::endl;
 }
 
 static int semVal(int semNum)
