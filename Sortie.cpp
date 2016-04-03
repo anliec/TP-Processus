@@ -34,11 +34,9 @@
 
 //---------------------------------------------------- Variables statiques
 static int msgbuffId;
-static int mpPlaceDispoId;
 static int mpParkingId;
 static int semId;
 
-static int *mpPlaceDispo;
 static Voiture *mpParking;
 
 static std::list<pid_t> listeVoiturier;
@@ -49,8 +47,11 @@ static void initId();
 static void attachSharedMemory();
 static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
 static void sigUsr2Handler(int signum);
+static int semVal(int semNum);
 static void semP(unsigned short int sem_num);
 static void semV(unsigned short int sem_num);
+
+
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -109,16 +110,6 @@ static void initId()
     {
         std::cerr << "unable to open msgbuff on Sortie" << std::endl;
     }
-    //récupération de la mémoire partager pour le nombre de place dispo
-    key_t keyMpPD = ftok(PATH_TO_MP_PLACEDISPO,PROJECT_ID);
-    if(keyMpPD<0)
-    {
-        std::cerr << "unable to get key for MP on " << PATH_TO_MP_PLACEDISPO << std::endl;
-    }
-    else if((mpPlaceDispoId=shmget(keyMpPD,0,DROITS_ACCES)) <0)
-    {
-        std::cerr << "unable to open MP PD on Sortie" << std::endl;
-    }
     //récupération de la mémoire partager représentant le parking
     key_t keyMpP = ftok(PATH_TO_MP_PARKING,PROJECT_ID);
     if(keyMpP<0)
@@ -139,13 +130,9 @@ static void initId()
 
 static void attachSharedMemory()
 {
-    if((mpPlaceDispo = (int*)shmat(mpParkingId,NULL,0)) == NULL)
+	if((mpParking = (Voiture *)shmat(mpParkingId,NULL,0)) == NULL)
     {
         std::cerr << "unable to attach shared memory Parking." << std::endl;
-    }
-    if((mpParking = (Voiture*)shmat(mpParkingId,NULL,0)) == NULL)
-    {
-        std::cerr << "unable to attach shared memory PlaceDispo." << std::endl;
     }
 }
 
@@ -167,11 +154,9 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     Effacer((TypeZone) ret);
 
     //ajoute une place
-    if(*mpPlaceDispo > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
+    if(semVal(SEMELM_PLACEDISPO) > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
-        semP(SEMELM_MP_PLACEDISPO);
-        (*mpPlaceDispo)++;
-        semV(SEMELM_MP_PLACEDISPO);
+        semV(SEMELM_PLACEDISPO);
     }
     else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
     {
@@ -211,11 +196,14 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
-            semP(SEMELM_MP_PLACEDISPO);
-            (*mpPlaceDispo)++;
-            semV(SEMELM_MP_PLACEDISPO);
+            semV(SEMELM_PLACEDISPO);
         }
     }
+}
+
+static int semVal(int semNum)
+{
+	return semctl(semId, semNum, GETVAL, 0);
 }
 
 static void sigUsr2Handler(int signum)

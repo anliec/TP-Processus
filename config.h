@@ -8,16 +8,16 @@
 *************************************************************************/
 
 
-//---------- Interface  <Config> (fichier config.h) ----------------------
+//---------- Interface du module <config> (fichier config.h) -------------
 #ifndef CONFIG_H
 #define CONFIG_H
 
 //------------------------------------------------------------------------
-// Role de <Config>
-// Contient toutes les definitions de types et constantes necessaire a
-// toute l'application (l'ensemble des taches de l'application). En
-// particulier la definiton d'une voiture et d'une requete
-//
+// Role de <config>
+// Contient toutes les definitions de types et constantes et fonctions de 
+// gestion de semaphores necessaires a toute l'application (l'ensemble des 
+// taches de l'application). En particulier la definiton d'une voiture et 
+// d'une requete
 //------------------------------------------------------------------------
 
 /////////////////////////////////////////////////////////////////  INCLUDE
@@ -38,13 +38,12 @@ const long MSGBUF_ID_REQUETE_GB = 6;
 // sémaphore
 const int NUMBER_OF_SEM = 5;
 const char* const PATH_TO_SEM = "semaphore";
-const int SEMELM_MP_PLACEDISPO = 0;
+const int SEMELM_PLACEDISPO = 0;
 const int SEMELM_MP_PARKING = 1;
 const int SEMELM_SINC_ENTREE_P = 2;
 const int SEMELM_SINC_ENTREE_A = 3;
 const int SEMELM_SINC_ENTREE_GB = 4;
 // mémoires partagées
-const char* const PATH_TO_MP_PLACEDISPO = "mpPlaceDispo";
 const char* const PATH_TO_MP_PARKING = "mpParking";
 
 //------------------------------------------------------------------ Types

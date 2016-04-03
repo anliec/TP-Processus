@@ -32,28 +32,33 @@
 
 //---------------------------------------------------- Variables statiques
 static int msgbuffId;
-static int mpPlaceDispoId;
 static int mpParkingId;
 static int semId;
 
-static int *mpPlaceDispo;
 static Voiture *mpParking;
+// structure combinant les voiturier et les voitures qu'il garent
+// jamais deux processus de voiturier n'auront le meme pid et on doit
+// pouvoir les retrouver dans n'importe quel ordre, donc utilisation d'une
+// map
+static std::map<pid_t, Voiture> mapVoiturier;
 //---------------------------------------------------- Fonctions internes
 static void init();
 static void initId();
 static void attachSharedMemory();
-static void sigChldHandler(int noSig);
+static void sigChldHandler(int noSig, siginfo_t *sigInfo, void *context);
 static void sigUsr2Handler(int noSig);
-void semP(unsigned short int sem_num);
-void semV(unsigned short int sem_num);
+static void semP(int sem_num);
+static void semV(int sem_num);
+static int semVal(int semNum);
+
 
 static void init()
 {
     struct sigaction sigactionUSR, sigactionCHLD;
     //associer le signal SIGCHLD a son handler
-    sigactionCHLD.sa_handler = &sigChldHandler;
+    sigactionCHLD.sa_sigaction = &sigChldHandler;
     sigemptyset(&(sigactionCHLD.sa_mask));
-    sigactionCHLD.sa_flags = 0;
+    sigactionCHLD.sa_flags = SA_SIGINFO;
     sigaction(SIGCHLD, &sigactionCHLD, NULL);
     //associer le signal SIGUSR2 a son handler
     sigactionUSR.sa_handler = &sigUsr2Handler;
@@ -80,16 +85,6 @@ static void initId()
     {
         std::cerr << "unable to open msgbuf on Entree" << std::endl;
     }
-    //récupération de la mémoire partager pour le nombre de place dispo
-    key_t keyMpPD = ftok(PATH_TO_MP_PLACEDISPO,PROJECT_ID);
-    if(keyMpPD<0)
-    {
-        std::cerr << "unable to get key for MP on " << PATH_TO_MP_PLACEDISPO << std::endl;
-    }
-    else if((mpPlaceDispoId=shmget(keyMpPD,0,DROITS_ACCES)) < 0)
-    {
-        std::cerr << "unable to open MP PD on Entree" << std::endl;
-    }
     //récupération de la mémoire partager représentant le parking
     key_t keyMpP = ftok(PATH_TO_MP_PARKING,PROJECT_ID);
     if(keyMpP<0)
@@ -110,19 +105,25 @@ static void initId()
 
 static void attachSharedMemory()
 {
-    if((mpPlaceDispo = (int *)shmat(mpParkingId,NULL,0)) == NULL)
+    if((mpParking = (Voiture *)shmat(mpParkingId,NULL,0)) == NULL)
     {
         std::cerr << "unable to attach shared memory Parking." << std::endl;
     }
-    if((mpParking = (Voiture *)shmat(mpParkingId,NULL,0)) == NULL)
-    {
-        std::cerr << "unable to attach shared memory PlaceDispo." << std::endl;
-    }
 }
 
-static void sigChldHandler(int noSig)
+static void sigChldHandler(int noSig, siginfo_t *sigInfo, void *context)
 {
-	
+	if((std::map<pid_t, Voiture>::iterator voiturierIt = mapVoiturier.find(siginfo->si_pid))
+			== mapVoiturier.end())
+    {
+    	return; //si le signal n'a pas ete envoye par un voiturier
+    }
+    else
+    {
+    	semP(SEMELM_MP_PARKING);
+    	mpParking[sigInfo->si_status] = voiturierIt->second;
+    	mapVoiturier.erase(voiturierIt);
+    }
 }
 
 static void sigUsr2Handler(int noSig)
@@ -132,23 +133,28 @@ static void sigUsr2Handler(int noSig)
 	struct sigaction sigactionCHLD;
 	sigactionCHLD.sa_handler = SIG_DFL;
 	sigactionCHLD.sa_flags = 0;
-	// detachement automatique des memoires partagees a l'arret du porcessus
+	// detachement auto de la memoire partagee a l'arret du porcessus
 	exit(0);
 }
 
-void semP(unsigned short int sem_num)
+static int semVal(int semNum)
+{
+	return semctl(semId, semNum, GETVAL, 0);
+}
+
+static void semP(int semNum)
 {
     struct sembuf op;
-    op.sem_num = sem_num;
+    op.sem_num = semNum;
     op.sem_flg = 0;
     op.sem_op = -1;
     semop(semId,&op,1);
 }
 
-void semV(unsigned short int sem_num)
+static void semV( int semNum)
 {
     struct sembuf op;
-    op.sem_num = sem_num;
+    op.sem_num = semNum;
     op.sem_flg = 0;
     op.sem_op = 1;
     semop(semId,&op,1);
@@ -193,19 +199,25 @@ void Entree(TypeBarriere typeBarriere)
     init();
 
     //phase moteur
-    std::vector<pid_t> listeVoiturier;
-    while(1)
+    pid_t pidCurr;
+    for(;;)
     {
         Voiture voiture;
         //appel bloquant, attente d'une demande d'entree
         msgrcv(msgbuffId,&voiture, sizeof(Voiture),msgBufEntreeId,0);
-		if(mpPlaceDispo[0] > 0)
-		{
+		DessinerVoitureBarriere(typeBarriere, voiture.typeUsager);
 		
+		if(semVal(SEMELM_PLACEDISPO) > 0)
+		{
+			if((pidCurr = GarerVoiture(typeBarriere)) != -1)
+			{
+				semP(SEMELM_PLACEDISPO);
+				mapVoiturier.insert(std::pair<pid-t, Voiture>(pidCurr, voiture));
+			}
 		}
 		else
 		{
-		
+			
 		}
 		/**
         //lance voiturier

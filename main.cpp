@@ -38,11 +38,7 @@
 int main()
 {
 	InitialiserApplication( XTERM );
-	
-	// segment de mem partagee indiquant le nombre places dispo
-	int memPlacesDispo = shmget(ftok(PATH_TO_MP_PLACEDISPO, PROJECT_ID), 
-		sizeof(int), IPC_CREAT | DROITS_ACCES);
-	
+		
 	// segment de memoire partagee contant l'etat de chaque place de 
 	// parking
 	int memParking = shmget(ftok(PATH_TO_MP_PARKING, PROJECT_ID),
@@ -51,6 +47,15 @@ int main()
 	// le semaphore general contenant tous les semaphores
 	int sem = semget(ftok(PATH_TO_SEM, PROJECT_ID), NUMBER_OF_SEM, 
 		IPC_CREAT | DROITS_ACCES);
+	// initalisation des semaphores elementaires
+	// nombre de places dispos 
+	semctl(sem, SEMELM_PLACEDISPO, SETVAL, 8);
+	// exlusion mutuelle d'acces a la mp
+	semctl(sem, SEMELM_MP_PARKING, SETVAL, 1);
+	// semaphores de priorite d'entree lorsque le parking est plein
+	semctl(sem, SEMELM_SINC_ENTREE_A, SETVAL, 0);
+	semctl(sem, SEMELM_SINC_ENTREE_GB, SETVAL, 0);
+	semctl(sem, SEMELM_SINC_ENTREE_P, SETVAL, 0);
 	
 	// boites aux lettres generale
 	int msggen = msgget(ftok(PATH_TO_MSGBUF, PROJECT_ID), IPC_CREAT 
@@ -96,7 +101,6 @@ int main()
 		msgctl(msggen, IPC_RMID, 0);
 		semctl(sem, IPC_RMID, 0);
 		shmctl(memParking, IPC_RMID, 0);
-		shmctl(memPlacesDispo, IPC_RMID, 0); 
 		TerminerApplication( true );
 		exit(0);
 	}
