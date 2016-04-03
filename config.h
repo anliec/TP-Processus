@@ -24,7 +24,7 @@
 //--------------------------------------------------- Interfaces utilisees
 #include "Outils.h"
 //------------------------------------------------------------- Constantes
-const int PROJECT_ID = 0;
+const int PROJECT_ID = 1;
 const int DROITS_ACCES = 0660;
 // boite aux lettres
 const char* const PATH_TO_MSGBUF = "msgbuf";
