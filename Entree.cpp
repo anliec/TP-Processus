@@ -216,7 +216,8 @@ void Entree(TypeBarriere typeBarriere)
     for(;;)
     {
         //appel bloquant, attente d'une demande d'entree
-        msgrcv(msgbuffId, &voiture, sizeof(Voiture) - sizeof(long), msgBufEntreeId, 0);
+        if(msgrcv(msgbuffId, &voiture, sizeof(Voiture), msgBufEntreeId, 0) == -1)
+            continue;
 		DessinerVoitureBarriere(typeBarriere, voiture.typeUsager);
 		
 		if(semVal(SEMELM_PLACEDISPO) > 0)
