@@ -123,6 +123,7 @@ static void sigChldHandler(int noSig, siginfo_t *siginfo, void *context)
     {
     	semP(SEMELM_MP_PARKING);
     	mpParking[siginfo->si_status] = voiturierIt->second;
+    	semV(SEMELM_MP_PARKING);
     	mapVoiturier.erase(voiturierIt);
     }
 }
