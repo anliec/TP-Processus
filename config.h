@@ -28,13 +28,13 @@ const int PROJECT_ID = 0;
 const int DROITS_ACCES = 0660;
 // boite aux lettres
 const char* const PATH_TO_MSGBUF = "msgbuf";
-const long MSGBUF_ID_ENTREE_P = 0;
-const long MSGBUF_ID_ENTREE_A = 1;
-const long MSGBUF_ID_ENTREE_GB = 2;
-const long MSGBUF_ID_SORTIE = 3;
-const long MSGBUF_ID_REQUETE_P = 4;
-const long MSGBUF_ID_REQUETE_A = 5;
-const long MSGBUF_ID_REQUETE_GB = 6;
+const long MSGBUF_ID_ENTREE_P = 1;
+const long MSGBUF_ID_ENTREE_A = 2;
+const long MSGBUF_ID_ENTREE_GB = 3;
+const long MSGBUF_ID_SORTIE = 4;
+const long MSGBUF_ID_REQUETE_P = 5;
+const long MSGBUF_ID_REQUETE_A = 6;
+const long MSGBUF_ID_REQUETE_GB = 7;
 // sémaphore
 const int NUMBER_OF_SEM = 5;
 const char* const PATH_TO_SEM = "semaphore";
