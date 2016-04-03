@@ -28,7 +28,7 @@ const int PROJECT_ID = 0;
 const int DROITS_ACCES = 0660;
 // boite aux lettres
 const char* const PATH_TO_MSGBUF = "msgbuf";
-const long MSGBUF_ID_ENTREE_P = 0;
+const long MSGBUF_ID_ENTREE_P = 7;
 const long MSGBUF_ID_ENTREE_A = 1;
 const long MSGBUF_ID_ENTREE_GB = 2;
 const long MSGBUF_ID_SORTIE = 3;

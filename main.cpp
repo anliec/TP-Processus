@@ -26,6 +26,7 @@
 #include "config.h"
 #include "Sortie.h"
 #include "Entree.h"
+#include "Heure.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -62,7 +63,7 @@ int main()
 		| DROITS_ACCES);
 	
 	// pid des processus fils
-	int pidSimul, pidEntreeP, pidEntreeA, pidEntreeGB, pidSortie;
+	int pidSimul, pidEntreeP, pidEntreeA, pidEntreeGB, pidSortie, pidHeure;
 	if((pidSimul = fork()) == 0)
 	{
 		Simulation();
@@ -83,12 +84,20 @@ int main()
 	{
 		Entree(ENTREE_GASTON_BERGER);
 	}
-	else
+	else 
 	{	
+		bool heureActive = ((pidHeure = ActiverHeure()) != -1);
+		
 		// attend que l'arret de Simulation indique la fin du programme
 		waitpid(pidSimul, NULL, 0);
+		// arret de l'heure, si activee
+		if(heureActive)
+		{
+			kill(pidHeure, SIGUSR2);
+			waitpid(pidHeure, NULL, 0);
+		}
 		// arret de Sortie
-		kill(pidSortie,SIGUSR2);
+		kill(pidSortie, SIGUSR2);
 		waitpid(pidSortie, NULL, 0);
 		// arret des Entree
 		kill(pidEntreeP, SIGUSR2);

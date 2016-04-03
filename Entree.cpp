@@ -16,6 +16,7 @@
 #include <sys/msg.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -136,6 +137,11 @@ static void sigUsr2Handler(int noSig)
 	sigactionCHLD.sa_handler = SIG_DFL;
 	sigactionCHLD.sa_flags = 0;
 	sigaction(SIGCHLD, &sigactionCHLD, NULL);
+	for(std::pair<pid_t,Voiture> voiturier : mapVoiturier)
+	{
+		kill(voiturier.first, SIGUSR2);
+		waitpid(voiturier.first, NULL, 0);
+	}
 	// detachement auto de la memoire partagee a l'arret du porcessus
 	exit(0);
 }
@@ -170,13 +176,16 @@ static void semV( int semNum)
 void Entree(TypeBarriere typeBarriere)
 {
 	//definition des id d'acces au boites aux lettres et semaphores
-	int msgBufEntreeId = MSGBUF_ID_ENTREE_P;
-	int msgbufRequeteId = MSGBUF_ID_REQUETE_P;
-	int semElementSyncEntree = SEMELM_SINC_ENTREE_P;
+	int msgBufEntreeId;
+	int msgbufRequeteId;
+	int semElementSyncEntree;
 	switch (typeBarriere)
 	{
 		case PROF_BLAISE_PASCAL :
 			//deja initialises aux bonnes valeurs;
+			msgBufEntreeId = MSGBUF_ID_ENTREE_P;
+			msgbufRequeteId = MSGBUF_ID_REQUETE_P;
+	 		semElementSyncEntree = SEMELM_SINC_ENTREE_P;
 			break;
 			
 		case AUTRE_BLAISE_PASCAL :
@@ -203,11 +212,11 @@ void Entree(TypeBarriere typeBarriere)
 
     //phase moteur
     pid_t pidCurr;
+    Voiture voiture;
     for(;;)
     {
-        Voiture voiture;
         //appel bloquant, attente d'une demande d'entree
-        msgrcv(msgbuffId,&voiture, sizeof(Voiture),msgBufEntreeId,0);
+        msgrcv(msgbuffId, &voiture, sizeof(Voiture) - sizeof(long), msgBufEntreeId, 0);
 		DessinerVoitureBarriere(typeBarriere, voiture.typeUsager);
 		
 		if(semVal(SEMELM_PLACEDISPO) > 0)
@@ -220,21 +229,12 @@ void Entree(TypeBarriere typeBarriere)
 		}
 		else
 		{
-			
+			semP(semElementSyncEntree);
+			if((pidCurr = GarerVoiture(typeBarriere)) != -1)
+			{
+				mapVoiturier.insert(std::pair<pid_t, Voiture>(pidCurr, voiture));
+			}
 		}
-		/**
-        //lance voiturier
-        pid_t voiturier = SortirVoiture(message.valeur);
-        if(voiturier == -1) //s'il n'y a pas de voiture à cette place on attend une nouvelle demande
-            continue;
-        listeVoiturier.push_back(voiturier);
-
-        //affiche message de sortie
-        semP(SEMELM_MP_PARKING);
-        voiture = mpParkingId[message.valeur];
-        semV(SEMELM_MP_PARKING);
-        AfficherSortie(voiture.type,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
-        */
     }
 }
 
