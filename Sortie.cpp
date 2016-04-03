@@ -162,14 +162,12 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     Effacer((TypeZone) ret);
 
     //ajoute une place
-    std::cerr << "place restante av : " << semVal(SEMELM_PLACEDISPO) << std::endl;
     if(semVal(SEMELM_PLACEDISPO) > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
         semV(SEMELM_PLACEDISPO);
     }
     else // sinon il faut dire quel entrée doit s'ouvrir (ou ajouter une place si il n'y pas de demandes)
     {
-        std::cerr << "cas 2" << std::endl;
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
         waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, MSG_COPY | IPC_NOWAIT) != -1;
@@ -209,11 +207,9 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
-            std::cerr << "cas else " << std::endl;
             semV(SEMELM_PLACEDISPO);
         }
     }
-    std::cerr << "place restante ap : " << semVal(SEMELM_PLACEDISPO) << std::endl;
 }
 
 static int semVal(int semNum)
