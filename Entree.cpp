@@ -19,7 +19,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <vector>
+
+#include <map>
 #include <iostream>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
@@ -111,17 +112,17 @@ static void attachSharedMemory()
     }
 }
 
-static void sigChldHandler(int noSig, siginfo_t *sigInfo, void *context)
+static void sigChldHandler(int noSig, siginfo_t *siginfo, void *context)
 {
-	if((std::map<pid_t, Voiture>::iterator voiturierIt = mapVoiturier.find(siginfo->si_pid))
-			== mapVoiturier.end())
+	std::map<pid_t, Voiture>::iterator voiturierIt = mapVoiturier.find(siginfo->si_pid);
+	if(voiturierIt == mapVoiturier.end())
     {
     	return; //si le signal n'a pas ete envoye par un voiturier
     }
     else
     {
     	semP(SEMELM_MP_PARKING);
-    	mpParking[sigInfo->si_status] = voiturierIt->second;
+    	mpParking[siginfo->si_status] = voiturierIt->second;
     	mapVoiturier.erase(voiturierIt);
     }
 }
@@ -133,6 +134,7 @@ static void sigUsr2Handler(int noSig)
 	struct sigaction sigactionCHLD;
 	sigactionCHLD.sa_handler = SIG_DFL;
 	sigactionCHLD.sa_flags = 0;
+	sigaction(SIGCHLD, &sigactionCHLD, NULL);
 	// detachement auto de la memoire partagee a l'arret du porcessus
 	exit(0);
 }
@@ -212,7 +214,7 @@ void Entree(TypeBarriere typeBarriere)
 			if((pidCurr = GarerVoiture(typeBarriere)) != -1)
 			{
 				semP(SEMELM_PLACEDISPO);
-				mapVoiturier.insert(std::pair<pid-t, Voiture>(pidCurr, voiture));
+				mapVoiturier.insert(std::pair<pid_t, Voiture>(pidCurr, voiture));
 			}
 		}
 		else
