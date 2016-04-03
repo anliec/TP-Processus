@@ -145,6 +145,14 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     int ret;
     waitpid(siginfo->si_pid,&ret,0);
     listeVoiturier.erase(voiturier);
+    if(WIFEXITED(ret))
+    {
+        ret = WEXITSTATUS(ret);
+    }
+    else
+    {
+        return; //le voiturier n'a pas quitté normalement, que faire d'autre ?
+    }
     //vide la place de parking     ->   désactiver car inutile (qui va aller vérifier ???)
     /*Voiture voitureNull;
     semP(SEMELM_MP_PARKING);
@@ -158,7 +166,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     {
         semV(SEMELM_PLACEDISPO);
     }
-    else // sinon en plus de rajouter une place il faut aussi dire quel entrée doit s'ouvrir
+    else // sinon il faut dire quel entrée doit s'ouvrir (ou ajouter une place si il n'y pas de demandes)
     {
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
@@ -173,6 +181,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
             nextIn = &rP;
             semEntree = SEMELM_SINC_ENTREE_P;
         }
+
         if(waitingAtGB)
         {
             if(nextIn==nullptr || (nextIn->heureArrivee > rGB.heureArrivee && rGB.typeUsager==PROF))
@@ -181,6 +190,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 semEntree = SEMELM_SINC_ENTREE_GB;
             }
         }
+
         if(waitingAtA)
         {
             if(nextIn==nullptr || (nextIn->typeUsager==AUTRE && nextIn->heureArrivee > rA.heureArrivee))
@@ -189,6 +199,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 semEntree = SEMELM_SINC_ENTREE_A;
             }
         }
+
         if(nextIn!= nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
         {
             msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
