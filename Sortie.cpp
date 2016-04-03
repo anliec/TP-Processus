@@ -67,7 +67,15 @@ void Sortie()
     {
         CommandeStruct message;
         //appel bloquant, attente d'une demande de sortie
-        msgrcv(msgbuffId,&message, sizeof(CommandeStruct),MSGBUF_ID_SORTIE,0);
+        if(msgrcv(msgbuffId,&message, sizeof(CommandeStruct),MSGBUF_ID_SORTIE,0) == -1)
+        {
+            //cerr << "pb on reading msg" << std::endl;
+            continue;
+        }
+        else{
+            //cerr << "msg read" << std::endl;
+        }
+
 
         //lance voiturier
         pid_t voiturier = SortirVoiture(message.valeur);
