@@ -122,6 +122,10 @@ static void sigChldHandler(int noSig, siginfo_t *siginfo, void *context)
     }
     else
     {
+        //affiche sur l'IHM
+        AfficherPlace(siginfo->si_status,voiturierIt->second.typeUsager,voiturierIt->second.immatriculation,
+                      voiturierIt->second.heureArrivee);
+        //ajoute la voiture au parking
     	semP(SEMELM_MP_PARKING);
     	mpParking[siginfo->si_status] = voiturierIt->second;
     	semV(SEMELM_MP_PARKING);
@@ -182,6 +186,7 @@ void Entree(TypeBarriere typeBarriere)
 	long msgBufEntreeId;
 	long msgbufRequeteId;
 	unsigned short semElementSyncEntree;
+    TypeZone zoneEcranRequete;
 	switch (typeBarriere)
 	{
 		case PROF_BLAISE_PASCAL :
@@ -189,6 +194,7 @@ void Entree(TypeBarriere typeBarriere)
 			msgBufEntreeId = MSGBUF_ID_ENTREE_P;
 			msgbufRequeteId = MSGBUF_ID_REQUETE_P;
 	 		semElementSyncEntree = SEMELM_SINC_ENTREE_P;
+            zoneEcranRequete = REQUETE_R1;
 			break;
 			
 		case AUTRE_BLAISE_PASCAL :
@@ -196,6 +202,7 @@ void Entree(TypeBarriere typeBarriere)
 			msgBufEntreeId = MSGBUF_ID_ENTREE_A;
 			msgbufRequeteId = MSGBUF_ID_REQUETE_A;
 			semElementSyncEntree = SEMELM_SINC_ENTREE_A;
+            zoneEcranRequete = REQUETE_R2;
 			break;
 
 		case ENTREE_GASTON_BERGER :
@@ -203,6 +210,7 @@ void Entree(TypeBarriere typeBarriere)
 			msgBufEntreeId = MSGBUF_ID_ENTREE_GB;
 			msgbufRequeteId = MSGBUF_ID_REQUETE_GB;
 			semElementSyncEntree = SEMELM_SINC_ENTREE_GB;
+            zoneEcranRequete = REQUETE_R3;
 			break;
 
 		default :
@@ -234,20 +242,25 @@ void Entree(TypeBarriere typeBarriere)
 		}
 		else
 		{
+            //affiche requete
+            AfficherRequete(typeBarriere,voiture.typeUsager,voiture.heureArrivee);
             Requete re;
             re.type = msgbufRequeteId;
             re.heureArrivee = voiture.heureArrivee;
             re.typeUsager = voiture.typeUsager;
-            if(msgsnd(msgbuffId, &re, sizeof(Requete), 0 )==-1)
-                cerr << "not posted: " << errno << endl;
-            std::cerr << "posted on " << msgbuffId << " | " << re.type << std::endl;
-            std::cerr << "wait a GO  " << semVal(semElementSyncEntree) << std::endl;
+            if(msgsnd(msgbuffId, &re, sizeof(Requete), 0 )==-1);
+                //cerr << "not posted: " << errno << endl;
+            //std::cerr << "posted on " << msgbuffId << " | " << re.type << std::endl;
+            //std::cerr << "wait a GO  " << semVal(semElementSyncEntree) << std::endl;
 			semP(semElementSyncEntree);
-            std::cerr << "get a GO ! " << semVal(semElementSyncEntree) << std::endl;
+            //std::cerr << "get a GO ! " << semVal(semElementSyncEntree) << std::endl;
 			if((pidCurr = GarerVoiture(typeBarriere)) != -1)
 			{
+                //met à jour l'heure d'entree dans le parking
+                voiture.heureArrivee = time(NULL);
 				mapVoiturier.insert(std::pair<pid_t, Voiture>(pidCurr, voiture));
 			}
+            Effacer(zoneEcranRequete);
 		}
     }
 }

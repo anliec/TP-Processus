@@ -65,23 +65,30 @@ void Sortie()
     //phase moteur
     while(1)
     {
+        cerr << listeVoiturier.size() << endl;
+
         CommandeStruct message;
         //appel bloquant, attente d'une demande de sortie
         if(msgrcv(msgbuffId,&message, sizeof(CommandeStruct),MSGBUF_ID_SORTIE,0) == -1)
-            continue; // sarestart (sur les erreurs aussi)
+        {
+            continue; // sarestart (sur toutes les erreurs)
+        }
+
 
         //lance voiturier
         pid_t voiturier = SortirVoiture(message.valeur);
         if(voiturier == -1) //s'il n'y a pas de voiture à cette place on attend une nouvelle demande
+        {
             continue;
+        }
         listeVoiturier.push_back(voiturier);
-
         //affiche message de sortie
         semP(SEMELM_MP_PARKING);
         Voiture voiture = mpParking[message.valeur];
         semV(SEMELM_MP_PARKING);
         voiture.heureDepart = time(NULL);
         AfficherSortie(voiture.typeUsager,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
+        Effacer((TypeZone) message.valeur);
     }
 }
 
@@ -139,11 +146,13 @@ static void attachSharedMemory()
 
 static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 {
+    cerr << "SIGCHLD from pid " << siginfo->si_pid << endl;
     list<pid_t>::iterator voiturier = find(listeVoiturier.begin(),listeVoiturier.end(),siginfo->si_pid);
     if(voiturier == listeVoiturier.end())
         return; //si pour une raison quelconque ce n'était pas un voiturier
 
     int ret;
+    cerr << "wait pid" << endl;
     waitpid(siginfo->si_pid,&ret,0);
     listeVoiturier.erase(voiturier);
     if(WIFEXITED(ret))
@@ -160,6 +169,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     //ajoute une place
     if(semVal(SEMELM_PLACEDISPO) > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
+        cerr << "place dispo++" << endl;
         semV(SEMELM_PLACEDISPO);
     }
     else // sinon il faut dire quel entrée doit s'ouvrir (ou ajouter une place si il n'y pas de demandes)
@@ -167,17 +177,17 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
         waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, 0 /*|MSG_COPY*/ | IPC_NOWAIT) != -1;
-        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_A << std::endl;
+        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_A << std::endl;
         if(!waitingAtA)
-            //cerr << "errno on A  " << errno << std::endl;
+            cerr << "errno on A  " << errno << std::endl;
         waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete),MSGBUF_ID_REQUETE_P, 0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
-        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_P << std::endl;
+        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_P << std::endl;
         if(!waitingAtP)
-            //cerr << "errno on P  " << errno << std::endl;
+            cerr << "errno on P  " << errno << std::endl;
         waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete),MSGBUF_ID_REQUETE_GB,0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
-        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_GB << std::endl;
+        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_GB << std::endl;
         if(!waitingAtGB)
-            //cerr << "errno on GB " << errno << std::endl;
+            cerr << "errno on GB " << errno << std::endl;
         //On trouve qui est plus prioritaire
         Requete *nextIn = nullptr;
         int semEntree;
@@ -215,6 +225,7 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 msgsnd(msgbuffId,&rGB,sizeof(Requete),0);
             //msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
             semV(semEntree);//donne l'autorisation de rentrer
+            std::cerr << "SEMOK" << nextIn->type << std::endl;
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
