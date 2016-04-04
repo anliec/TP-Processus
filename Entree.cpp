@@ -216,6 +216,7 @@ void Entree(TypeBarriere typeBarriere)
 		default :
 
 			std::cerr << "not an entry process error" << std::endl;
+            return;
 			break;
 	}
     //initialisation

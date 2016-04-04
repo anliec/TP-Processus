@@ -38,16 +38,28 @@ static int plaqueCourante;
 
 //------------------------------------------------------- Fonctions privee
 static void init();
+static void moteur();
 static void envoyerVoiture(unsigned barriere, TypeUsager typeUtilisateur);
 static void sortieVoiture(unsigned numPlace);
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 
 //---------------------------------------------------- Fonctions publiques
+void Simulation(int idMsgBuff)
+{
+	msgbuffId = idMsgBuff;
+	moteur();
+}
+
 void Simulation()
 {
 	init();
-	for(;;)
+	moteur();
+}
+
+static void moteur()
+{
+	for (;;)
 	{
 		Menu();
 	}
@@ -80,6 +92,7 @@ static void init()
 	if(keyMsgBuf<0)
 	{
 		std::cerr << "unable to get key for msgbuf on " << PATH_TO_MSGBUF << std::endl;
+		exit(2);
 	}
 	else if((msgbuffId = msgget(keyMsgBuf,0660)) <0)
 	{

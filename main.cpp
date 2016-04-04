@@ -70,7 +70,7 @@ int main()
 	} 
 	else if((pidSortie = fork()) == 0)
 	{
-		Sortie();
+		Sortie(msggen,memParking,sem);
 	}
 	else if((pidEntreeP = fork()) == 0)	
 	{

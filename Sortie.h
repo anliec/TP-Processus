@@ -14,7 +14,9 @@
 
 //------------------------------------------------------------------------
 // Rôle du module <Sortie>
-// [...] TODO
+// Sortie prend en charge la gestion des demandes de sortie générer pas
+// le module Simulation, ce module ce charge aussi d'ordonencer les
+// entrées affin de choisir les quels sont prioritaire
 //
 //------------------------------------------------------------------------
 
@@ -27,11 +29,23 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
+void Sortie(int idMsgBuff, int iDMpParking, int idSem);
+// Mode d'emploi :
+//	Execute toute les actions du module Sortie ainsi que sont
+//  inisialisation
+// Contrat :
+//	affin de garantir le fonctionnement de cette methode il faut que les
+//  différents objets partagé dont les id sont passé en paramètre soit
+//  corectement initialisé.
+
 void Sortie();
 // Mode d'emploi :
-//	TODO
+//	Execute toute les actions du module Sortie ainsi que sont
+//  inisialisation
 // Contrat :
-//	Aucun
+//	affin de garantir le fonctionnement de cette methode il faut que les
+//  différents objets partagé soit corectement initialiser (cf config.h
+//  pour avoir les paramètre utilisé).
 
 #endif // SORTIE_H
 
