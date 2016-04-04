@@ -38,11 +38,11 @@ const long MSGBUF_ID_REQUETE_GB = 7;
 // sémaphore
 const int NUMBER_OF_SEM = 5;
 const char* const PATH_TO_SEM = "semaphore";
-const int SEMELM_PLACEDISPO = 0;
-const int SEMELM_MP_PARKING = 1;
-const int SEMELM_SINC_ENTREE_P = 2;
-const int SEMELM_SINC_ENTREE_A = 3;
-const int SEMELM_SINC_ENTREE_GB = 4;
+const unsigned short SEMELM_PLACEDISPO = 0;
+const unsigned short SEMELM_MP_PARKING = 1;
+const unsigned short SEMELM_SINC_ENTREE_P = 2;
+const unsigned short SEMELM_SINC_ENTREE_A = 3;
+const unsigned short SEMELM_SINC_ENTREE_GB = 4;
 // mémoires partagées
 const char* const PATH_TO_MP_PARKING = "mpParking";
 

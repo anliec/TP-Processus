@@ -49,8 +49,8 @@ static void initId();
 static void attachSharedMemory();
 static void sigChldHandler(int noSig, siginfo_t *sigInfo, void *context);
 static void sigUsr2Handler(int noSig);
-static void semP(int sem_num);
-static void semV(int sem_num);
+static void semP(unsigned short sem_num, bool saRestart=true);
+static void semV(unsigned short sem_num);
 static int semVal(int semNum);
 
 
@@ -151,16 +151,19 @@ static int semVal(int semNum)
 	return semctl(semId, semNum, GETVAL, 0);
 }
 
-static void semP(int semNum)
+static void semP(unsigned short semNum, bool saRestart)
 {
     struct sembuf op;
     op.sem_num = semNum;
     op.sem_flg = 0;
     op.sem_op = -1;
-    semop(semId,&op,1);
+    int returnValue;
+    do{
+        returnValue = semop(semId,&op,1);
+    }while(returnValue==-1 && saRestart);
 }
 
-static void semV( int semNum)
+static void semV(unsigned short semNum)
 {
     struct sembuf op;
     op.sem_num = semNum;
@@ -176,9 +179,9 @@ static void semV( int semNum)
 void Entree(TypeBarriere typeBarriere)
 {
 	//definition des id d'acces au boites aux lettres et semaphores
-	int msgBufEntreeId;
-	int msgbufRequeteId;
-	int semElementSyncEntree;
+	long msgBufEntreeId;
+	long msgbufRequeteId;
+	unsigned short semElementSyncEntree;
 	switch (typeBarriere)
 	{
 		case PROF_BLAISE_PASCAL :
@@ -217,7 +220,8 @@ void Entree(TypeBarriere typeBarriere)
     {
         //appel bloquant, attente d'une demande d'entree
         if(msgrcv(msgbuffId, &voiture, sizeof(Voiture), msgBufEntreeId, 0) == -1)
-            continue;
+            continue; // sarestart (sur les erreurs aussi)
+        //std::cerr << "voiture get on msgBuf: " << msgBufEntreeId << std::endl;
 		DessinerVoitureBarriere(typeBarriere, voiture.typeUsager);
 		
 		if(semVal(SEMELM_PLACEDISPO) > 0)
@@ -230,7 +234,16 @@ void Entree(TypeBarriere typeBarriere)
 		}
 		else
 		{
+            Requete re;
+            re.type = msgbufRequeteId;
+            re.heureArrivee = voiture.heureArrivee;
+            re.typeUsager = voiture.typeUsager;
+            if(msgsnd(msgbuffId, &re, sizeof(Requete), 0 )==-1)
+                cerr << "not posted: " << errno << endl;
+            std::cerr << "posted on " << msgbuffId << " | " << re.type << std::endl;
+            std::cerr << "wait a GO  " << semVal(semElementSyncEntree) << std::endl;
 			semP(semElementSyncEntree);
+            std::cerr << "get a GO ! " << semVal(semElementSyncEntree) << std::endl;
 			if((pidCurr = GarerVoiture(typeBarriere)) != -1)
 			{
 				mapVoiturier.insert(std::pair<pid_t, Voiture>(pidCurr, voiture));

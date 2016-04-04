@@ -61,10 +61,10 @@ void Commande(char code, unsigned int valeur)
 			exit(0);
 			break;
 		case 'P':
-			envoyerVoiture(valeur,PROF);
+			envoyerVoiture(2*valeur-1,PROF);
 			break;
 		case 'A':
-			envoyerVoiture(valeur,AUTRE);
+			envoyerVoiture(valeur+1,AUTRE);
 			break;
 		case 'S':
 			sortieVoiture(valeur);

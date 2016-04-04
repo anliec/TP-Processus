@@ -48,7 +48,7 @@ static void attachSharedMemory();
 static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
 static void sigUsr2Handler(int signum);
 static int semVal(int semNum);
-static void semP(unsigned short int sem_num);
+static void semP(unsigned short int sem_num, bool saRestart=true);
 static void semV(unsigned short int sem_num);
 
 
@@ -68,14 +68,7 @@ void Sortie()
         CommandeStruct message;
         //appel bloquant, attente d'une demande de sortie
         if(msgrcv(msgbuffId,&message, sizeof(CommandeStruct),MSGBUF_ID_SORTIE,0) == -1)
-        {
-            //cerr << "pb on reading msg" << std::endl;
-            continue;
-        }
-        else{
-            //cerr << "msg read" << std::endl;
-        }
-
+            continue; // sarestart (sur les erreurs aussi)
 
         //lance voiturier
         pid_t voiturier = SortirVoiture(message.valeur);
@@ -161,11 +154,6 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     {
         return; //le voiturier n'a pas quitté normalement, que faire d'autre ?
     }
-    //vide la place de parking     ->   désactiver car inutile (qui va aller vérifier ???)
-    /*Voiture voitureNull;
-    semP(SEMELM_MP_PARKING);
-    mpParking[ret] = voitureNull;
-    semV(SEMELM_MP_PARKING);*/
     //vide l'affichage de la place de parking
     Effacer((TypeZone) ret);
 
@@ -178,9 +166,18 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
     {
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
-        waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, MSG_COPY | IPC_NOWAIT) != -1;
-        waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete),MSGBUF_ID_REQUETE_P, MSG_COPY | IPC_NOWAIT) != -1;
-        waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete),MSGBUF_ID_REQUETE_GB,MSG_COPY | IPC_NOWAIT) != -1;
+        waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, 0 /*|MSG_COPY*/ | IPC_NOWAIT) != -1;
+        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_A << std::endl;
+        if(!waitingAtA)
+            //cerr << "errno on A  " << errno << std::endl;
+        waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete),MSGBUF_ID_REQUETE_P, 0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
+        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_P << std::endl;
+        if(!waitingAtP)
+            //cerr << "errno on P  " << errno << std::endl;
+        waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete),MSGBUF_ID_REQUETE_GB,0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
+        //std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_GB << std::endl;
+        if(!waitingAtGB)
+            //cerr << "errno on GB " << errno << std::endl;
         //On trouve qui est plus prioritaire
         Requete *nextIn = nullptr;
         int semEntree;
@@ -189,7 +186,6 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
             nextIn = &rP;
             semEntree = SEMELM_SINC_ENTREE_P;
         }
-
         if(waitingAtGB)
         {
             if(nextIn==nullptr || (nextIn->heureArrivee > rGB.heureArrivee && rGB.typeUsager==PROF))
@@ -198,7 +194,6 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
                 semEntree = SEMELM_SINC_ENTREE_GB;
             }
         }
-
         if(waitingAtA)
         {
             if(nextIn==nullptr || (nextIn->typeUsager==AUTRE && nextIn->heureArrivee > rA.heureArrivee))
@@ -208,13 +203,22 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
             }
         }
 
-        if(nextIn!= nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
+        if(nextIn != nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
         {
-            msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
+            std::cerr << "Request found on " << nextIn->type << std::endl;
+            //reposte les requete refuser dans les boite aux lettre:
+            if(nextIn != &rA)
+                msgsnd(msgbuffId,&rA,sizeof(Requete),0);
+            if(nextIn != &rP)
+                msgsnd(msgbuffId,&rP,sizeof(Requete),0);
+            if(nextIn != &rGB)
+                msgsnd(msgbuffId,&rGB,sizeof(Requete),0);
+            //msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
             semV(semEntree);//donne l'autorisation de rentrer
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
+            std::cerr << "No request found" << std::endl;
             semV(SEMELM_PLACEDISPO);
         }
     }
@@ -240,13 +244,16 @@ static void sigUsr2Handler(int signum)
     exit(0); //un peut brutal peut-être
 }
 
-static void semP(unsigned short int sem_num)
+static void semP(unsigned short int sem_num, bool saRestart)
 {
     struct sembuf op;
     op.sem_num = sem_num;
     op.sem_flg = 0;
     op.sem_op = -1;
-    semop(semId,&op,1);
+    int returnValue;
+    do{
+        returnValue = semop(semId,&op,1);
+    }while(returnValue==-1 && saRestart);
 }
 
 static void semV(unsigned short int sem_num)
