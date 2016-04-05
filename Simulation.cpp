@@ -120,7 +120,7 @@ static void envoyerVoiture(unsigned barriere, TypeUsager typeUtilisateur)
 		default:
 			return;
 	}
-	msgsnd(msgbuffId,&voiture,sizeof(Voiture),0);
+	msgsnd(msgbuffId,&voiture,sizeof(Voiture)-sizeof(long),0);
 }
 
 static void sortieVoiture(unsigned numPlace)
@@ -128,7 +128,7 @@ static void sortieVoiture(unsigned numPlace)
 	CommandeStruct cmd;
 	cmd.valeur = numPlace;
 	cmd.type = MSGBUF_ID_SORTIE;
-	msgsnd(msgbuffId,&cmd,sizeof(CommandeStruct),0);
+	msgsnd(msgbuffId,&cmd,sizeof(CommandeStruct)-sizeof(long),0);
 }
 
 

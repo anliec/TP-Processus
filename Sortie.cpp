@@ -43,15 +43,15 @@ static Voiture *mpParking;
 static std::map<pid_t,int> listeVoiturier;
 
 //------------------------------------------------------- Fonctions privee
-static void init();
 static void initId();
+static void initSignalsHandler();
 static void attachSharedMemory();
 static void moteur();
-static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext);
+static void sigChldHandler(int signum);
 static void sigUsr2Handler(int signum);
 static int semVal(int semNum);
 static void semP(unsigned short int sem_num, bool saRestart=true);
-static void semV(unsigned short int sem_num);
+static void semV(unsigned short int sem_num, bool saRestart=true);
 
 
 
@@ -60,9 +60,16 @@ static void semV(unsigned short int sem_num);
 
 void Sortie(int idMsgBuff, int iDMpParking, int idSem)
 {
+    //initialisation
+    //catch signals
+    initSignalsHandler();
+    //initialistion des ID des resources partagées
     msgbuffId = idMsgBuff;
     mpParkingId = iDMpParking;
     semId = idSem;
+    //attachement des mémoires partagé
+    attachSharedMemory();
+
 
     //phase moteur
     moteur();
@@ -71,7 +78,12 @@ void Sortie(int idMsgBuff, int iDMpParking, int idSem)
 void Sortie()
 {
     //initialisation
-    init();
+    //catch signals
+    initSignalsHandler();
+    //initialistion des ID des resources partagées
+    initId();
+    //attachement des mémoires partagé
+    attachSharedMemory();
 
     //phase moteur
     moteur();
@@ -81,13 +93,11 @@ static void moteur()
 {
     while(1)
     {
-        cerr << "number of voiturier: " << listeVoiturier.size() << endl;
-
         CommandeStruct message;
         //appel bloquant, attente d'une demande de sortie
-        if(msgrcv(msgbuffId,&message, sizeof(CommandeStruct),MSGBUF_ID_SORTIE,0) == -1)
+        if(msgrcv(msgbuffId,&message, sizeof(CommandeStruct)-sizeof(long),MSGBUF_ID_SORTIE,0) == -1)
         {
-            continue; // sarestart (sur toutes les erreurs)
+            continue; // sa_restart (sur toutes les erreurs)
         }
 
         //lance voiturier
@@ -102,24 +112,21 @@ static void moteur()
         semP(SEMELM_MP_PARKING);
         Voiture voiture = mpParking[message.valeur];
         semV(SEMELM_MP_PARKING);
+        //met à jour l'heure de départ
         voiture.heureDepart = time(NULL);
+        //met à jour les affichages
         AfficherSortie(voiture.typeUsager,voiture.immatriculation,voiture.heureArrivee, voiture.heureDepart);
         Effacer((TypeZone) message.valeur);
     }
 }
 
-static void init()
+static void initSignalsHandler()
 {
-    //catch signals
     struct sigaction sigactionUSR, sigactionCHLD;
-    sigactionCHLD.sa_sigaction = &sigChldHandler;
+    sigactionCHLD.sa_handler = &sigChldHandler;
     sigactionUSR.sa_handler = &sigUsr2Handler;
     sigaction(SIGCHLD, &sigactionCHLD, NULL);
     sigaction(SIGUSR2, &sigactionUSR, NULL);
-    //initialistion des ID des resources partagées
-    initId();
-    //attachement des mémoires partagé
-    attachSharedMemory();
 }
 
 static void initId()
@@ -160,55 +167,37 @@ static void attachSharedMemory()
     }
 }
 
-static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
+static void sigChldHandler(int signum)
 {
-    cerr << "SIGCHLD from pid " << siginfo->si_pid << endl;
-    //list<pid_t>::iterator voiturier = find(listeVoiturier.begin(),listeVoiturier.end(),siginfo->si_pid);
-    map<pid_t,int>::iterator voiturier = listeVoiturier.find(siginfo->si_pid);
-    if(voiturier == listeVoiturier.end())
-        return; //si pour une raison quelconque ce n'était pas un voiturier
-
-    int ret = voiturier->second;
-    cerr << "wait pid" << endl;
-    waitpid(siginfo->si_pid,&ret,0);
-    cerr << "pid get" << endl;
-    listeVoiturier.erase(voiturier);
-    cerr << "erased" << endl;
-    /*if(WIFEXITED(ret))
+    int ret, pid;
+    if((pid = waitpid(-1,&ret,0))<=0)
+    {
+        return;
+    }
+    listeVoiturier.erase(listeVoiturier.find(pid));
+    if(WIFEXITED(ret))
     {
         ret = WEXITSTATUS(ret);
     }
     else
     {
-        cerr << "probleme on voiturier, unable to get return code" << endl;
         return; //le voiturier n'a pas quitté normalement, que faire d'autre ?
-    }*/
+    }
     //vide l'affichage de la place de parking
     Effacer((TypeZone) ret);
-    cerr << "effacer" << endl;
 
     //ajoute une place
     if(semVal(SEMELM_PLACEDISPO) > 0) // s'il y avait déjà des places dispo pas la peine de chercher plus loin on ajoute juste une place disponible
     {
-        cerr << "place dispo++" << endl;
         semV(SEMELM_PLACEDISPO);
     }
     else // sinon il faut dire quel entrée doit s'ouvrir (ou ajouter une place si il n'y pas de demandes)
     {
         bool waitingAtA, waitingAtP, waitingAtGB;
         Requete rA, rP, rGB;
-        waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete),MSGBUF_ID_REQUETE_A, 0 /*|MSG_COPY*/ | IPC_NOWAIT) != -1;
-        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_A << std::endl;
-        if(!waitingAtA)
-            cerr << "errno on A  " << errno << std::endl;
-        waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete),MSGBUF_ID_REQUETE_P, 0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
-        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_P << std::endl;
-        if(!waitingAtP)
-            cerr << "errno on P  " << errno << std::endl;
-        waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete),MSGBUF_ID_REQUETE_GB,0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
-        std::cerr << "reading on " << msgbuffId << " | " << MSGBUF_ID_REQUETE_GB << std::endl;
-        if(!waitingAtGB)
-            cerr << "errno on GB " << errno << std::endl;
+        waitingAtA  = msgrcv(msgbuffId,&rA, sizeof(Requete)-sizeof(long),MSGBUF_ID_REQUETE_A, 0 /*|MSG_COPY*/ | IPC_NOWAIT) != -1;
+        waitingAtP  = msgrcv(msgbuffId,&rP, sizeof(Requete)-sizeof(long),MSGBUF_ID_REQUETE_P, 0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
+        waitingAtGB = msgrcv(msgbuffId,&rGB,sizeof(Requete)-sizeof(long),MSGBUF_ID_REQUETE_GB,0 /*| MSG_COPY*/ | IPC_NOWAIT) != -1;
         //On trouve qui est plus prioritaire
         Requete *nextIn = nullptr;
         int semEntree;
@@ -236,21 +225,18 @@ static void sigChldHandler(int signum,siginfo_t *siginfo,void* ucontext)
 
         if(nextIn != nullptr) //si on a trouver quelqu'un on lui donne l'autorisation pour rentrer
         {
-            std::cerr << "Request found on " << nextIn->type << std::endl;
             //reposte les requete refuser dans les boite aux lettre:
             if(nextIn != &rA && waitingAtA)
-                msgsnd(msgbuffId,&rA,sizeof(Requete),0);
+                msgsnd(msgbuffId,&rA,sizeof(Requete)-sizeof(long),0);
             if(nextIn != &rP && waitingAtP)
-                msgsnd(msgbuffId,&rP,sizeof(Requete),0);
+                msgsnd(msgbuffId,&rP,sizeof(Requete)-sizeof(long),0);
             if(nextIn != &rGB && waitingAtGB)
-                msgsnd(msgbuffId,&rGB,sizeof(Requete),0);
+                msgsnd(msgbuffId,&rGB,sizeof(Requete)-sizeof(long),0);
             //msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
             semV(semEntree);//donne l'autorisation de rentrer
-            std::cerr << "SEMOK" << nextIn->type << std::endl;
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
         {
-            std::cerr << "No request found" << std::endl;
             semV(SEMELM_PLACEDISPO);
         }
     }
@@ -288,11 +274,14 @@ static void semP(unsigned short int sem_num, bool saRestart)
     }while(returnValue==-1 && saRestart);
 }
 
-static void semV(unsigned short int sem_num)
+static void semV(unsigned short int sem_num, bool saRestart)
 {
     struct sembuf op;
     op.sem_num = sem_num;
     op.sem_flg = 0;
     op.sem_op = 1;
-    semop(semId,&op,1);
+    int returnValue;
+    do{
+        returnValue = semop(semId,&op,1);
+    }while(returnValue==-1 && saRestart);
 }
