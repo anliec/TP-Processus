@@ -232,7 +232,7 @@ static void sigChldHandler(int signum)
                 msgsnd(msgbuffId,&rP,sizeof(Requete)-sizeof(long),0);
             if(nextIn != &rGB && waitingAtGB)
                 msgsnd(msgbuffId,&rGB,sizeof(Requete)-sizeof(long),0);
-            //msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepter de la boite aux lettre
+            //msgrcv(msgbuffId,NULL,nextIn->type,sizeof(Requete),0); //retire la requette accepte de la boite aux lettre
             semV(semEntree);//donne l'autorisation de rentrer
         }
         else //si le parking était plein mais que personne n'attendait on ajoute une place libre
