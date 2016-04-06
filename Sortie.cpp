@@ -40,7 +40,7 @@ static int semId;
 
 static Voiture *mpParking;
 
-static std::map<pid_t,int> listeVoiturier;
+static std::list<pid_t> listeVoiturier;
 
 //------------------------------------------------------- Fonctions privee
 static void initId();
@@ -106,8 +106,7 @@ static void moteur()
         {
             continue;
         }
-        //listeVoiturier.push_back(voiturier);
-        listeVoiturier[voiturier]=message.valeur;
+        listeVoiturier.push_back(voiturier);
         //affiche message de sortie
         semP(SEMELM_MP_PARKING);
         Voiture voiture = mpParking[message.valeur];
@@ -174,7 +173,7 @@ static void sigChldHandler(int signum)
     {
         return;
     }
-    listeVoiturier.erase(listeVoiturier.find(pid));
+    listeVoiturier.erase(find(listeVoiturier.begin(),listeVoiturier.end(),pid));
     if(WIFEXITED(ret))
     {
         ret = WEXITSTATUS(ret);
@@ -254,12 +253,12 @@ static void sigUsr2Handler(int signum)
     resetAction.sa_handler = SIG_IGN;// pour ignorer les prochains signaux
     sigaction(SIGCHLD,&resetAction,NULL);
     //arrête tout les voiturier un à un
-    for(std::pair<const int, int> pid:listeVoiturier)
+    for(pid_t pid:listeVoiturier)
     {
-        kill(pid.first,SIGUSR2);
-        waitpid(pid.first,NULL,0);
+        kill(pid,SIGUSR2);
+        waitpid(pid,NULL,0);
     }
-    exit(0); //un peut brutal peut-être
+    exit(0);
 }
 
 static void semP(unsigned short int sem_num, bool saRestart)
