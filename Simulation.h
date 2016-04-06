@@ -23,21 +23,31 @@
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Simulation(int idMsgBuff);
-// Mode d'emploi :
-//	Execute toute les actions du module Simulation ainsi que sont
-//  inisialisation.
-// Contrat :
-//	La boite au lettre dont l'id est fournie en paramettre est corectement
-//  initialisé.
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Simulation ainsi que sont
+ *  inisialisation.
+ * Contrat :
+ *	La boite au lettre dont l'id est fournie en paramettre est corectement
+ *  initialisé.
+ */
 
 void Simulation();
-// Mode d'emploi :
-//	Execute toute les actions du module Simulation ainsi que sont
-//  inisialisation.
-// Contrat :
-//	La boite au lettre défini dans config.h est corectement initialisé.
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Simulation ainsi que sont
+ *  inisialisation.
+ * Contrat :
+ *	La boite au lettre défini dans config.h est corectement initialisé.
+ */
 
 void Commande(char code, unsigned int valeur);
+/**
+ * Mode d'emploi :
+ *	Transmet la commande aux autres modules
+ * Contrat :
+ *	Le module SImulation est corectement initialisé.
+ */
 
 #endif // SIMULATION_H
 

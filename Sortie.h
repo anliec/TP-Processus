@@ -30,22 +30,26 @@
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Sortie(int idMsgBuff, int iDMpParking, int idSem);
-// Mode d'emploi :
-//	Execute toute les actions du module Sortie ainsi que sont
-//  inisialisation
-// Contrat :
-//	affin de garantir le fonctionnement de cette methode il faut que les
-//  différents objets partagé dont les id sont passé en paramètre soit
-//  corectement initialisé.
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Sortie ainsi que sont
+ *  inisialisation
+ * Contrat :
+ *	affin de garantir le fonctionnement de cette methode il faut que les
+ *  différents objets partagé dont les id sont passé en paramètre soit
+ *  corectement initialisé.
+ */
 
 void Sortie();
-// Mode d'emploi :
-//	Execute toute les actions du module Sortie ainsi que sont
-//  inisialisation
-// Contrat :
-//	affin de garantir le fonctionnement de cette methode il faut que les
-//  différents objets partagé soit corectement initialiser (cf config.h
-//  pour avoir les paramètre utilisé).
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Sortie ainsi que sont
+ *  inisialisation
+ * Contrat :
+ *	affin de garantir le fonctionnement de cette methode il faut que les
+ *  différents objets partagé soit corectement initialiser (cf config.h
+ *  pour avoir les paramètre utilisé).
+ */
 
 #endif // SORTIE_H
 

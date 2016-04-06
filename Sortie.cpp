@@ -44,21 +44,90 @@ static std::list<pid_t> listeVoiturier;
 
 //------------------------------------------------------- Fonctions privee
 static void initId();
+/**
+ * Mode d'emploi :
+ *  initialise les différents ID des objets partagé grace aux
+ *  parramètre de config.h
+ */
+
 static void initSignalsHandler();
+/**
+ * Mode d'emploi :
+ *  initialise les handler de signaux pour le module Sortie
+ */
+
 static void attachSharedMemory();
+/**
+ * Mode d'emploi :
+ *  initialise du pointeur vers la zone de mémoire partagé
+ */
+
 static void moteur();
+/**
+ * Mode d'emploi :
+ *  Gère les demandes de sorites.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+
 static void sigChldHandler(int signum);
+/**
+ * Mode d'emploi :
+ *  Recoit les sorties de voitures et gère le nétoyage de l'affichage et
+ *  la priorité des Entrées
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+
 static void sigUsr2Handler(int signum);
+/**
+ * Mode d'emploi :
+ *  Nétoie et ferme le module Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+
 static int semVal(int semNum);
+/**
+ * Mode d'emploi :
+ *  Récupère la valeur courante du sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du
+ *  module Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+
 static void semP(unsigned short int sem_num, bool saRestart=true);
+/**
+ * Mode d'emploi :
+ *  Effectue une opération P unitaire sur le sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du module
+ *  Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+
 static void semV(unsigned short int sem_num, bool saRestart=true);
-
-
+/**
+ * Mode d'emploi :
+ *  Effectue une opération V unitaire sur le sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du module
+ *  Sortie
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 
 void Sortie(int idMsgBuff, int iDMpParking, int idSem)
+// Mode d'emploi :
+//	Execute toute les actions du module Sortie ainsi que sont
+//  inisialisation
+// Contrat :
+//	affin de garantir le fonctionnement de cette methode il faut que les
+//  différents objets partagé dont les id sont passé en paramètre soit
+//  corectement initialisé.
 {
     //initialisation
     //catch signals
@@ -76,6 +145,13 @@ void Sortie(int idMsgBuff, int iDMpParking, int idSem)
 }
 
 void Sortie()
+// Mode d'emploi :
+//	Execute toute les actions du module Sortie ainsi que sont
+//  inisialisation
+// Contrat :
+//	affin de garantir le fonctionnement de cette methode il faut que les
+//  différents objets partagé soit corectement initialiser (cf config.h
+//  pour avoir les paramètre utilisé).
 {
     //initialisation
     //catch signals
@@ -90,6 +166,15 @@ void Sortie()
 }
 
 static void moteur()
+/**
+ * Algorithme :
+ *  Boucle infini lisant la boite aux lettres des demandes de sorties, puis
+ *  créant un voiturier et gérant l'affichage avant de recomancer.
+ * Mode d'emploi :
+ *  Gère les demandes de sorites.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 {
     while(1)
     {
@@ -120,6 +205,10 @@ static void moteur()
 }
 
 static void initSignalsHandler()
+/**
+ * Mode d'emploi :
+ *  initialise les handler de signaux pour le module Sortie
+ */
 {
     struct sigaction sigactionUSR, sigactionCHLD;
     sigactionCHLD.sa_handler = &sigChldHandler;
@@ -129,6 +218,11 @@ static void initSignalsHandler()
 }
 
 static void initId()
+/**
+ * Mode d'emploi :
+ *  initialise les différents ID des objets partagé grace aux
+ *  parramètre de config.h
+ */
 {
     //récupération de la boite au lettre:
     key_t keyMsgBuf = ftok(PATH_TO_MSGBUF,PROJECT_ID);
@@ -159,6 +253,10 @@ static void initId()
 }
 
 static void attachSharedMemory()
+/**
+ * Mode d'emploi :
+ *  initialise du pointeur vers la zone de mémoire partagé
+ */
 {
 	if((mpParking = (Voiture *)shmat(mpParkingId,NULL,0)) == NULL)
     {
@@ -167,6 +265,22 @@ static void attachSharedMemory()
 }
 
 static void sigChldHandler(int signum)
+/**
+ * Algorithme :
+ *  recupère le PID d'un fils ayant terminé ainsi que son code de sortie et
+ *  actualise l'affichage en fonction. Si le nombre de place disponible dans
+ *  le parking est strictement supérieur à zero alors il ajoute simplement
+ *  une place disponible dans le parking. Sinon récupère les demandes des
+ *  différentes entrées et si il y en a au moins une aplique les règle de
+ *  priorité pour sélectionner l'entrée à ouvrir et lui transmet l'ordre
+ *  sinon dans le cas ou le parking est plein mais qu'il n'y a pas de demande
+ *  il ajoute une place disponible dans le parking.
+ * Mode d'emploi :
+ *  Recoit les sorties de voitures et gère le nétoyage de l'affichage et
+ *  la priorité des Entrées
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 {
     int ret, pid;
     if((pid = waitpid(-1,&ret,0))<=0)
@@ -241,12 +355,19 @@ static void sigChldHandler(int signum)
     }
 }
 
-static int semVal(int semNum)
-{
-	return semctl(semId, semNum, GETVAL, 0);
-}
-
 static void sigUsr2Handler(int signum)
+/**
+ * Algorithme:
+ *  Change le handler du signal SIGCHLD affin d'ignorer les
+ *  prochain signaux de ce type, puis arrête un par un les
+ *  voituriers existants, grace à une SIGUSR2 en atendant
+ *  leur fin avant de continuer. Une fois tout les voituriers
+ *  arrêté arrête le module Sortie
+ * Mode d'emploi :
+ *  Nétoie et ferme le module Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 {
     //desactive sigChldHandler
     struct sigaction resetAction;
@@ -261,7 +382,28 @@ static void sigUsr2Handler(int signum)
     exit(0);
 }
 
+static int semVal(int semNum)
+/**
+ * Mode d'emploi :
+ *  Récupère la valeur courante du sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du
+ *  module Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
+{
+    return semctl(semId, semNum, GETVAL, 0);
+}
+
 static void semP(unsigned short int sem_num, bool saRestart)
+/**
+ * Mode d'emploi :
+ *  Effectue une opération P unitaire sur le sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du module
+ *  Sortie.
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 {
     struct sembuf op;
     op.sem_num = sem_num;
@@ -274,6 +416,14 @@ static void semP(unsigned short int sem_num, bool saRestart)
 }
 
 static void semV(unsigned short int sem_num, bool saRestart)
+/**
+ * Mode d'emploi :
+ *  Effectue une opération V unitaire sur le sémaphore élémentaire,
+ *  donner en parramètre, issue du sémaphore générale du module
+ *  Sortie
+ * Contrat :
+ *  le module Sortie est corectement initialisé.
+ */
 {
     struct sembuf op;
     op.sem_num = sem_num;

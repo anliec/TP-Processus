@@ -38,26 +38,83 @@ static int plaqueCourante;
 
 //------------------------------------------------------- Fonctions privee
 static void init();
+/**
+ * Mode d'emploi :
+ *  Initialise la boite au lettre à l'aide des paramètres fournies
+ *  ainsi que le numéro de la première plaque.
+ * Contrat :
+ *	Les données fournies par Config.h sont correcte et corresponde
+ *	à une boite aux lettres corectement initialiser.
+ */
+
 static void moteur();
+/**
+ * Mode d'emploi :
+ *  Récupère les entrées clavier.
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
+
 static void envoyerVoiture(unsigned barriere, TypeUsager typeUtilisateur);
+/**
+ * Mode d'emploi :
+ *  Envoie une voiture à l'entrée corespondant au paramettre barriere
+ *  Cette voiture est correctement initialiser avec une heure d'arrivée
+ *  corespondant à l'heure d'arriver devant la barrière et une plaque
+ *  d'imatriculation unique.
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
+
 static void sortieVoiture(unsigned numPlace);
+/**
+ * Mode d'emploi :
+ *  Envoie le numéro de place de la voiture à sortir à la Sortie
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 
 //---------------------------------------------------- Fonctions publiques
 void Simulation(int idMsgBuff)
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Simulation ainsi que sont
+ *  inisialisation.
+ * Contrat :
+ *	La boite au lettre dont l'id est fournie en paramettre est corectement
+ *  initialisé.
+ */
 {
 	msgbuffId = idMsgBuff;
+	plaqueCourante = 1;
 	moteur();
 }
 
 void Simulation()
+/**
+ * Mode d'emploi :
+ *	Execute toute les actions du module Simulation ainsi que sont
+ *  inisialisation.
+ * Contrat :
+ *	La boite au lettre défini dans config.h est corectement initialisé.
+ */
 {
 	init();
 	moteur();
 }
 
 static void moteur()
+/**
+ * Algorithme :
+ *  Boucle infini fesant appelle à la fonction Menu
+ *  fournie par outils.h
+ * Mode d'emploi :
+ *  Récupère les entrées clavier.
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
 {
 	for (;;)
 	{
@@ -66,6 +123,12 @@ static void moteur()
 }
 
 void Commande(char code, unsigned int valeur)
+/**
+ * Mode d'emploi :
+ *	Transmet la commande aux autres modules.
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
 {
 	switch(code)
 	{
@@ -85,6 +148,14 @@ void Commande(char code, unsigned int valeur)
 }
 
 static void init()
+/**
+ * Mode d'emploi :
+ *  Initialise la boite au lettre à l'aide des paramètres fournies
+ *  ainsi que le numéro de la première plaque.
+ * Contrat :
+ *	Les données fournies par Config.h sont correcte et corresponde
+ *	à une boite aux lettres corectement initialiser.
+ */
 {
 	plaqueCourante = 1;
 	//récupération de la boite au lettre:
@@ -101,6 +172,15 @@ static void init()
 }
 
 static void envoyerVoiture(unsigned barriere, TypeUsager typeUtilisateur)
+/**
+ * Mode d'emploi :
+ *  Envoie une voiture à l'entrée corespondant au paramettre barriere
+ *  Cette voiture est correctement initialiser avec une heure d'arrivée
+ *  corespondant à l'heure d'arriver devant la barrière et une plaque
+ *  d'imatriculation unique.
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
 {
 	Voiture voiture;
 	voiture.typeUsager = typeUtilisateur;
@@ -124,6 +204,12 @@ static void envoyerVoiture(unsigned barriere, TypeUsager typeUtilisateur)
 }
 
 static void sortieVoiture(unsigned numPlace)
+/**
+ * Mode d'emploi :
+ *  Envoie le numéro de place de la voiture à sortir à la Sortie
+ * Contrat :
+ *	Le module Simulation est corectement initialisé.
+ */
 {
 	CommandeStruct cmd;
 	cmd.valeur = numPlace;
