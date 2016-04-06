@@ -24,6 +24,7 @@
 //--------------------------------------------------- Interfaces utilisees
 #include "Outils.h"
 //------------------------------------------------------------- Constantes
+// constantes générales
 const int PROJECT_ID = 1;
 const int DROITS_ACCES = 0660;
 // boite aux lettres
